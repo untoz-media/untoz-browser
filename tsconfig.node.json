@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "*": ["*"]
+    },
+    "rootDir": ".",
+    "outDir": "dist",
+    "sourceMap": true,
+    "removeComments": true,
+    "noEmit": false,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"],
+    "composite": true
+  },
+  "include": [
+    "electron/**/*",
+    "src/**/*"
+  ],
+  "exclude": [
+    "__tests__",
+    "*.test.ts",
+    "*.spec.ts"
+  ]
+}

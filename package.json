@@ -1,0 +1,62 @@
+{
+  "name": "untoz-browser",
+  "version": "1.0.0",
+  "description": "Untoz Browser - A premium, minimalist, and extremely fast browser",
+  "main": "dist/main.js",
+  "author": "Untoz",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "set ELECTRON_BUILDER_SKIP_BINARY_DOWNLOAD=1 && vite build && electron-builder --win portable",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "framer-motion": "^10.12.0",
+    "lucide-react": "^0.263.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.0",
+    "zustand": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "@types/react": "^18.0.35",
+    "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.14",
+    "concurrently": "^10.0.3",
+    "cross-env": "^10.1.0",
+    "electron": "^25.0.0",
+    "electron-builder": "^24.0.0",
+    "eslint": "^8.38.0",
+    "eslint-plugin-react": "^7.32.2",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.1",
+    "typescript": "^5.0.3",
+    "vite": "^4.3.0",
+    "vite-plugin-electron": "^0.12.0",
+    "vite-plugin-node-polyfills": "^0.28.0"
+  },
+  "build": {
+    "appId": "com.untoz.browser",
+    "productName": "Untoz Browser",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "portable",
+      "sign": false
+    },
+    "mac": {
+      "target": "default",
+      "sign": false
+    }
+  }
+}
