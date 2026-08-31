@@ -55,7 +55,7 @@ const createBrowserView = () => {
   });
 
   contents.loadURL('https://www.untoz.com');
-  mainWindow.webContents.send('browser:request-bounds');
+  setTimeout(() => mainWindow?.webContents.send('browser:request-bounds'), 100);
 };
 
 const createWindow = () => {
@@ -83,9 +83,7 @@ const createWindow = () => {
     mainWindow.loadFile(join(__dirname, '../dist/index.html'));
   }
 
-  mainWindow.webContents.on('did-finish-load', () => {
-    createBrowserView();
-  });
+  mainWindow.webContents.on('did-finish-load', createBrowserView);
 
   mainWindow.on('closed', () => {
     browserView?.webContents.close();
