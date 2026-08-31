@@ -55,6 +55,7 @@ const createBrowserView = () => {
   });
 
   contents.loadURL('https://www.untoz.com');
+  mainWindow.webContents.send('browser:request-bounds');
 };
 
 const createWindow = () => {
