@@ -17,6 +17,7 @@ declare global {
       stop: () => void;
       onNavigationState: (callback: (state: NavigationState) => void) => () => void;
       onFavicon: (callback: (favicon: string) => void) => () => void;
+      onRequestBounds: (callback: () => void) => () => void;
     };
   }
 }
