@@ -26,4 +26,9 @@ contextBridge.exposeInMainWorld('untozBrowser', {
     ipcRenderer.on('browser:favicon-updated', listener);
     return () => ipcRenderer.removeListener('browser:favicon-updated', listener);
   },
+  onRequestBounds: (callback: () => void) => {
+    const listener = () => callback();
+    ipcRenderer.on('browser:request-bounds', listener);
+    return () => ipcRenderer.removeListener('browser:request-bounds', listener);
+  },
 });
