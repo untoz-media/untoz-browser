@@ -1,42 +1,54 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useTabsStore } from '@/store/useTabsStore';
 
 interface WebViewProps {
   url: string;
 }
 
 export const WebView = ({ url }: WebViewProps) => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { activeTabId, updateTab } = useTabsStore();
 
   useEffect(() => {
-    if (!iframeRef.current) return;
-    const handleLoad = () => setIsLoading(false);
-    const handleError = () => setIsLoading(false);
+    const container = containerRef.current;
+    const browser = window.untozBrowser;
+    if (!container || !browser) return;
 
-    iframeRef.current.addEventListener('load', handleLoad);
-    iframeRef.current.addEventListener('error', handleError);
+    const syncBounds = () => {
+      const rect = container.getBoundingClientRect();
+      browser.setBounds({
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+      });
+    };
+
+    const observer = new ResizeObserver(syncBounds);
+    observer.observe(container);
+    window.addEventListener('resize', syncBounds);
+    syncBounds();
+
+    const unsubscribeNavigation = browser.onNavigationState((state) => {
+      if (!activeTabId) return;
+      updateTab(activeTabId, {
+        url: state.url || url,
+        title: state.title || 'Nova Aba',
+      });
+    });
 
     return () => {
-      iframeRef.current.removeEventListener('load', handleLoad);
-      iframeRef.current.removeEventListener('error', handleError);
+      observer.disconnect();
+      window.removeEventListener('resize', syncBounds);
+      unsubscribeNavigation();
     };
-  }, []);
+  }, [activeTabId, updateTab, url]);
 
   return (
-    <div className="relative w-full h-full bg-gray-50">
-      {isLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-          <div className="text-gray-500">Loading...</div>
-        </div>
-      ) : null}
-      <iframe
-        ref={iframeRef}
-        src={url || 'about:blank'}
-        title="Web view"
-        className="w-full h-full border-0"
-        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-        allow="microphone; camera"
-      />
-    </div>
+    <div
+      ref={containerRef}
+      className="relative w-full h-full bg-background"
+      aria-label="Área de navegação web"
+    />
   );
 };
