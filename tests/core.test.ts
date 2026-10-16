@@ -16,13 +16,21 @@ import { DEFAULT_SETTINGS, NEW_TAB, type Tab } from "../shared/browser";
 import { isCommand } from "../shared/commands";
 import {
   Storage,
+  acceptedDownloadDirectory,
   addHistory,
   sessionSnapshot,
   validSettings,
 } from "../electron/storage";
 
 test("Alpha settings migrate with privacy defaults and bounded exceptions", () => {
-  const settings = validSettings({ theme: "midnight", adBlocking: false, siteExceptions: ["example.com", "example.com", "https://bad.test/path"] }, DEFAULT_SETTINGS);
+  const settings = validSettings(
+    {
+      theme: "midnight",
+      adBlocking: false,
+      siteExceptions: ["example.com", "example.com", "https://bad.test/path"],
+    },
+    DEFAULT_SETTINGS,
+  );
   assert.equal(settings.theme, "midnight");
   assert.equal(settings.adBlocking, false);
   assert.equal(settings.removeTrackingParameters, true);
@@ -31,20 +39,75 @@ test("Alpha settings migrate with privacy defaults and bounded exceptions", () =
 });
 
 test("Standard network filters honor resource types, third-party rules and exceptions", () => {
-  const engine = FiltersEngine.parse("||ads.example^$script,third-party\n@@||ads.example/allowed.js$script", { loadCosmeticFilters: false });
-  const request = (url: string, sourceUrl = "https://publisher.test", type: "script" | "image" = "script") => Request.fromRawDetails({ url, sourceUrl, type });
+  const engine = FiltersEngine.parse(
+    "||ads.example^$script,third-party\n@@||ads.example/allowed.js$script",
+    { loadCosmeticFilters: false },
+  );
+  const request = (
+    url: string,
+    sourceUrl = "https://publisher.test",
+    type: "script" | "image" = "script",
+  ) => Request.fromRawDetails({ url, sourceUrl, type });
   assert.equal(engine.match(request("https://ads.example/ad.js")).match, true);
-  assert.equal(engine.match(request("https://ads.example/allowed.js")).match, false);
-  assert.equal(engine.match(request("https://ads.example/ad.js", "https://ads.example")).match, false);
-  assert.equal(engine.match(request("https://ads.example/ad.js", "https://publisher.test", "image")).match, false);
+  assert.equal(
+    engine.match(request("https://ads.example/allowed.js")).match,
+    false,
+  );
+  assert.equal(
+    engine.match(request("https://ads.example/ad.js", "https://ads.example"))
+      .match,
+    false,
+  );
+  assert.equal(
+    engine.match(
+      request("https://ads.example/ad.js", "https://publisher.test", "image"),
+    ).match,
+    false,
+  );
 });
 
 test("Bundled list hashes validate and established lists match actual ad/tracker requests", () => {
   const filters = new NetworkFilters(join(process.cwd(), "resources/filters"));
-  assert.equal(filters.match("https://www.google-analytics.com/collect", "https://publisher.test", "xhr", false, true), "trackers");
-  assert.equal(filters.match("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", "https://publisher.test", "script", true, false), "ads");
-  assert.equal(filters.match("https://www.google-analytics.com/collect", "https://publisher.test", "xhr", false, false), undefined);
-  assert.equal(filters.match("https://example.com/article", "https://example.com", "xhr", true, true), undefined);
+  assert.equal(
+    filters.match(
+      "https://www.google-analytics.com/collect",
+      "https://publisher.test",
+      "xhr",
+      false,
+      true,
+    ),
+    "trackers",
+  );
+  assert.equal(
+    filters.match(
+      "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
+      "https://publisher.test",
+      "script",
+      true,
+      false,
+    ),
+    "ads",
+  );
+  assert.equal(
+    filters.match(
+      "https://www.google-analytics.com/collect",
+      "https://publisher.test",
+      "xhr",
+      false,
+      false,
+    ),
+    undefined,
+  );
+  assert.equal(
+    filters.match(
+      "https://example.com/article",
+      "https://example.com",
+      "xhr",
+      true,
+      true,
+    ),
+    undefined,
+  );
 });
 
 test("addresses, localhost ports, IPv6 and search engines", () => {
@@ -134,6 +197,24 @@ test("Brave Search and new removal commands are validated", () => {
     isCommand({ type: "download", id: "known-id", action: "remove" }),
     true,
   );
+  assert.equal(
+    isCommand({ type: "download", id: "known-id", action: "pause" }),
+    true,
+  );
+  assert.equal(
+    isCommand({ type: "download", id: "known-id", action: "resume" }),
+    true,
+  );
+  assert.equal(
+    isCommand({ type: "download", id: "known-id", action: "exec" }),
+    false,
+  );
+  assert.equal(acceptedDownloadDirectory("relative/downloads"), "");
+  assert.equal(acceptedDownloadDirectory("../outside"), "");
+  assert.equal(
+    acceptedDownloadDirectory(join(tmpdir(), "untoz-downloads")),
+    join(tmpdir(), "untoz-downloads"),
+  );
   assert.equal(isInlineFavicon("https://tracking.test/icon.png"), false);
   assert.equal(isInlineFavicon("data:image/svg+xml,<svg/>"), false);
 });
@@ -158,6 +239,22 @@ test("versioned storage survives restart and protects corrupt input", () => {
     storage.data.settings.restoreSession = true;
     storage.flush();
     assert.equal(new Storage(path).data.settings.restoreSession, true);
+    writeFileSync(
+      path,
+      JSON.stringify({
+        version: 1,
+        settings: { downloadDirectory: "relative/downloads" },
+      }),
+    );
+    assert.equal(new Storage(path).data.settings.downloadDirectory, "");
+    writeFileSync(
+      path,
+      JSON.stringify({
+        version: 1,
+        settings: { downloadDirectory: dir },
+      }),
+    );
+    assert.equal(new Storage(path).data.settings.downloadDirectory, dir);
     writeFileSync(path, "{broken");
     const broken = new Storage(path);
     broken.flush();

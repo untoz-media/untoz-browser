@@ -1,8 +1,22 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 import { SEARCH_ENGINES } from "../../shared/search";
-import { send, useTabsStore } from "@/store/useTabsStore";
+import { send, useTabsStore, type Panel } from "@/store/useTabsStore";
 import type { Settings } from "../../shared/browser";
+const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
+  bookmarks: "Favorites",
+  history: "History",
+  downloads: "Downloads",
+  settings: "Settings",
+  privacy: "Site privacy",
+  about: "About",
+};
+function formatBytes(value: number) {
+  if (!Number.isFinite(value) || value < 0) return "0 B";
+  if (value < 1024) return `${Math.round(value)} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
+}
 function Toggle({
   label,
   checked,
@@ -26,7 +40,23 @@ function Toggle({
 export function Panels() {
   const state = useTabsStore();
   const [historyLimit, setHistoryLimit] = useState(300);
+  const [bookmarkQuery, setBookmarkQuery] = useState("");
+  const [historyQuery, setHistoryQuery] = useState("");
   const tab = state.tabs.find((t) => t.id === state.activeTabId);
+  const bookmarkNeedle = bookmarkQuery.trim().toLowerCase();
+  const historyNeedle = historyQuery.trim().toLowerCase();
+  const bookmarks = state.bookmarks.filter(
+    (b) =>
+      !bookmarkNeedle ||
+      b.title.toLowerCase().includes(bookmarkNeedle) ||
+      b.url.toLowerCase().includes(bookmarkNeedle),
+  );
+  const history = state.history.filter(
+    (h) =>
+      !historyNeedle ||
+      h.title.toLowerCase().includes(historyNeedle) ||
+      h.url.toLowerCase().includes(historyNeedle),
+  );
   const set = (settings: Partial<Settings>) =>
     void send({ type: "settings", settings });
   const open = (url: string) => {
@@ -38,13 +68,7 @@ export function Panels() {
       <header>
         <div>
           <div className="eyebrow">UNTOZ BROWSER</div>
-          <h1>
-            {state.panel === "bookmarks"
-              ? "Favorites"
-              : state.panel === "privacy"
-                ? "Site privacy"
-                : state.panel}
-          </h1>
+          <h1>{state.panel ? PANEL_TITLES[state.panel] : ""}</h1>
         </div>
         <button aria-label="Close panel" onClick={() => state.setPanel(null)}>
           <X size={21} />
@@ -56,12 +80,24 @@ export function Panels() {
             Saved on this device. Use the star in the address bar to save a
             page.
           </p>
+          {state.bookmarks.length > 0 && (
+            <input
+              className="panel-search"
+              aria-label="Search favorites"
+              placeholder="Search favorites"
+              value={bookmarkQuery}
+              onChange={(e) => setBookmarkQuery(e.target.value)}
+            />
+          )}
           {!state.bookmarks.length && (
             <p className="empty-state">
               Your favorite places will appear here.
             </p>
           )}
-          {state.bookmarks.map((b) => (
+          {state.bookmarks.length > 0 && !bookmarks.length && (
+            <p className="empty-state">No favorites match that search.</p>
+          )}
+          {bookmarks.map((b) => (
             <div className="list-row" key={b.id}>
               {b.favicon && (
                 <img src={b.favicon} width={16} height={16} alt="" />
@@ -94,10 +130,22 @@ export function Panels() {
               Clear history
             </button>
           </div>
+          {state.history.length > 0 && (
+            <input
+              className="panel-search"
+              aria-label="Search history"
+              placeholder="Search history"
+              value={historyQuery}
+              onChange={(e) => setHistoryQuery(e.target.value)}
+            />
+          )}
           {!state.history.length && (
             <p className="empty-state">No browsing history.</p>
           )}
-          {state.history.slice(0, historyLimit).map((h) => (
+          {state.history.length > 0 && !history.length && (
+            <p className="empty-state">No history matches that search.</p>
+          )}
+          {history.slice(0, historyLimit).map((h) => (
             <div className="list-row" key={h.url}>
               <button className="list-main" onClick={() => open(h.url)}>
                 <strong>{h.title}</strong>
@@ -114,7 +162,7 @@ export function Panels() {
               </button>
             </div>
           ))}
-          {state.history.length > historyLimit && (
+          {history.length > historyLimit && (
             <button
               className="action"
               onClick={() => setHistoryLimit((limit) => limit + 300)}
@@ -127,8 +175,8 @@ export function Panels() {
       {state.panel === "downloads" && (
         <>
           <p className="muted">
-            Downloads from this browser session. Saved files remain on your
-            device.
+            Downloads from this browser session. Pause and resume last until
+            Untoz closes. Saved files remain on your device.
           </p>
           {!state.downloads.length && (
             <p className="empty-state">No downloads yet.</p>
@@ -143,10 +191,8 @@ export function Panels() {
                 <span className="download-source">{d.sourceUrl}</span>
               )}
               <span>
-                {d.state} · {(d.received / 1024 / 1024).toFixed(1)} MB
-                {d.total > 0
-                  ? ` / ${(d.total / 1024 / 1024).toFixed(1)} MB`
-                  : ""}
+                {d.state} · {formatBytes(d.received)}
+                {d.total > 0 ? ` / ${formatBytes(d.total)}` : ""}
               </span>
               <progress
                 value={
@@ -161,6 +207,34 @@ export function Panels() {
                 max={d.total || 1}
               />
               <div>
+                {d.active && d.state !== "paused" && (
+                  <button
+                    className="action"
+                    onClick={() =>
+                      void send({
+                        type: "download",
+                        id: d.id,
+                        action: "pause",
+                      })
+                    }
+                  >
+                    Pause
+                  </button>
+                )}
+                {d.state === "paused" && (
+                  <button
+                    className="action"
+                    onClick={() =>
+                      void send({
+                        type: "download",
+                        id: d.id,
+                        action: "resume",
+                      })
+                    }
+                  >
+                    Resume
+                  </button>
+                )}
                 {d.active && (
                   <button
                     className="action"

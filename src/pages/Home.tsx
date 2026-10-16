@@ -83,8 +83,9 @@ export function Home() {
                 type: "add-quick-link",
                 title: String(data.get("title")),
                 url: String(data.get("url")),
+              }).then(() => {
+                if (!useTabsStore.getState().error) setAdding(false);
               });
-              setAdding(false);
             }}
           >
             <input

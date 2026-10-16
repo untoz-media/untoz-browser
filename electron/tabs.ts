@@ -33,6 +33,7 @@ export class Tabs {
   private fullscreenId?: string;
   private closing = false;
   private clearingData = false;
+  private privateCleanupFailed = false;
   readonly privacy: Privacy;
   readonly downloads: Downloads;
   constructor(
@@ -93,6 +94,10 @@ export class Tabs {
     if (this.closing || this.clearingData) return "";
     if (this.entries.size >= 100)
       throw new Error("Close a tab before opening more.");
+    if (isPrivate && this.privateCleanupFailed)
+      throw new Error(
+        "Private data could not be cleared. Restart Untoz before opening another private tab.",
+      );
     if (isPrivate && this.privateCleaning)
       throw new Error("Private data is being cleared. Try again in a moment.");
     const url = resolveNavigateInput(
@@ -234,8 +239,13 @@ export class Tabs {
         event.preventDefault();
     });
     wc.setWindowOpenHandler(({ url }) => {
-      if (isWebUrl(url) && this.entries.size < 100)
-        this.create(url, tab.data.private);
+      if (isWebUrl(url) && this.entries.size < 100) {
+        try {
+          this.create(url, tab.data.private);
+        } catch {
+          /* The popup is still denied when a tab cannot be opened. */
+        }
+      }
       return { action: "deny" };
     });
     wc.on("did-start-navigation", (_event, url, inPlace, mainFrame) => {
@@ -278,8 +288,7 @@ export class Tabs {
       }
     });
     wc.on("page-title-updated", (_event, title) => {
-      tab.data.title = title.slice(0, 300);
-      this.changed();
+      this.rememberTitle(tab, title);
     });
     wc.on("page-favicon-updated", (_event, icons) => {
       const url = icons.find(isWebUrl);
@@ -325,7 +334,7 @@ export class Tabs {
         tab.data.title = new URL(url).hostname;
       }
       tab.data.error =
-        code <= -200 && code >= -299
+        code <= -200 && code >= -219
           ? "The site’s security certificate could not be verified. Connection blocked."
           : `This page could not be loaded (${description}). Check the address and your connection.`;
       tab.data.isLoading = false;
@@ -339,6 +348,33 @@ export class Tabs {
       this.changed();
     });
     return view;
+  }
+  private rememberTitle(tab: RuntimeTab, title: string) {
+    const next = title.slice(0, 300).trim();
+    if (!next) return;
+    tab.data.title = next;
+    if (!tab.data.private && isWebUrl(tab.data.url)) {
+      const url = tab.data.url;
+      if (
+        this.storage.data.history.some((h) => h.url === url && h.title !== next)
+      ) {
+        this.storage.data.history = this.storage.data.history.map((h) =>
+          h.url === url ? { ...h, title: next } : h,
+        );
+        this.storage.schedule();
+      }
+      if (
+        this.storage.data.bookmarks.some(
+          (b) => b.url === url && b.title !== next,
+        )
+      ) {
+        this.storage.data.bookmarks = this.storage.data.bookmarks.map((b) =>
+          b.url === url ? { ...b, title: next, updatedAt: Date.now() } : b,
+        );
+        this.storage.schedule();
+      }
+    }
+    this.changed();
   }
   private recordHistory(tab: RuntimeTab) {
     if (tab.data.private || tab.data.error || !isWebUrl(tab.data.url)) return;
@@ -362,6 +398,7 @@ export class Tabs {
     this.changed();
   }
   navigate(input: string) {
+    if (!input.trim()) return;
     const url = resolveNavigateInput(
       input,
       this.storage.data.settings.searchEngine,
@@ -402,7 +439,12 @@ export class Tabs {
       wc.navigationHistory.goForward();
     if (type === "reload") {
       tab.data.error = undefined;
-      this.load(tab, tab.data.url);
+      // A crashed renderer cannot reload in place; load the last address again.
+      if (wc.isCrashed()) this.load(tab, tab.data.url);
+      else {
+        wc.reload();
+        this.changed();
+      }
     }
     if (type === "stop") wc.stop();
   }
@@ -433,10 +475,16 @@ export class Tabs {
       if (next) this.activate(next);
       else if (!this.closing) this.create();
     }
-    if (![...this.entries.values()].some((t) => t.data.private))
-      await this.clearPrivate();
+    let cleanupError: unknown;
+    try {
+      if (![...this.entries.values()].some((t) => t.data.private))
+        await this.clearPrivate();
+    } catch (error) {
+      cleanupError = error;
+    }
     this.persist();
     this.changed();
+    if (cleanupError) throw cleanupError;
   }
   private async clearPrivate() {
     const ses = this.privateSession;
@@ -453,12 +501,22 @@ export class Tabs {
       this.privateCleaning = false;
     } catch {
       // Fail closed: do not reuse this partition if any private-data cleanup failed.
+      this.privateCleaning = false;
+      this.privateCleanupFailed = true;
       throw new Error(
         "Private data could not be cleared. Restart Untoz before opening another private tab.",
       );
     }
   }
   viewport(bounds: typeof this.bounds, visible: boolean) {
+    if (
+      this.visible === visible &&
+      this.bounds.x === bounds.x &&
+      this.bounds.y === bounds.y &&
+      this.bounds.width === bounds.width &&
+      this.bounds.height === bounds.height
+    )
+      return;
     this.bounds = bounds;
     this.visible = visible;
     this.layout();
@@ -543,7 +601,12 @@ export class Tabs {
     for (const tab of this.entries.values()) this.releaseView(tab);
     this.entries.clear();
     this.privacy.dispose();
-    await this.clearPrivate();
+    try {
+      await this.clearPrivate();
+    } catch (error) {
+      // Shutdown must still honor clear-on-exit if private cleanup fails.
+      console.error(error);
+    }
     if (this.storage.data.settings.clearSiteDataOnExit) {
       await this.normalSession.clearStorageData();
       await this.normalSession.clearCache();
@@ -554,6 +617,10 @@ export class Tabs {
       if (input.type !== "keyDown") return;
       const key = input.key.toLowerCase();
       const ctrl = input.control || input.meta;
+      if (input.isAutoRepeat && ctrl && (key === "t" || key === "w")) {
+        event.preventDefault();
+        return;
+      }
       let handled = true;
       if (ctrl && key === "t") {
         if (this.entries.size < 100 && !this.privateCleaning)

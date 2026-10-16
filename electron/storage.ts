@@ -1,5 +1,5 @@
 import { readFileSync, mkdirSync, writeFileSync, renameSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, isAbsolute } from "node:path";
 import {
   DEFAULT_SETTINGS,
   NEW_TAB,
@@ -38,6 +38,12 @@ export function addHistory(
   entry: HistoryEntry,
 ): HistoryEntry[] {
   return [entry, ...history.filter((h) => h.url !== entry.url)].slice(0, 3000);
+}
+/** Only an absolute folder from this profile is accepted. Relative paths are ignored. */
+export function acceptedDownloadDirectory(value: unknown): string {
+  return typeof value === "string" && value.length <= 4096 && isAbsolute(value)
+    ? value
+    : "";
 }
 export function validSettings(
   input: Partial<Settings>,
@@ -95,8 +101,9 @@ export class Storage {
         raw.settings ?? {},
         this.data.settings,
       );
-      if (typeof raw.settings?.downloadDirectory === "string")
-        this.data.settings.downloadDirectory = raw.settings.downloadDirectory;
+      this.data.settings.downloadDirectory = acceptedDownloadDirectory(
+        raw.settings?.downloadDirectory,
+      );
       this.data.bookmarks = (Array.isArray(raw.bookmarks) ? raw.bookmarks : [])
         .filter(
           (b) =>

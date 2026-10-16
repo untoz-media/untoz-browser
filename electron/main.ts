@@ -14,7 +14,7 @@ import { pathToFileURL } from "node:url";
 import { IPC, type BrowserState } from "../shared/browser";
 import { isCommand } from "../shared/commands";
 import { isWebUrl } from "../shared/navigation";
-import { Storage, validSettings } from "./storage";
+import { Storage, acceptedDownloadDirectory, validSettings } from "./storage";
 import { Tabs } from "./tabs";
 
 if (process.env.UNTOZ_TEST_PROFILE && !app.isPackaged)
@@ -227,10 +227,11 @@ function registerIPC() {
         const result = await dialog.showOpenDialog(mainWindow, {
           properties: ["openDirectory", "createDirectory"],
         });
-        if (!result.canceled && result.filePaths[0])
+        const directory = acceptedDownloadDirectory(result.filePaths[0]);
+        if (!result.canceled && directory)
           storage.data.settings = {
             ...storage.data.settings,
-            downloadDirectory: result.filePaths[0],
+            downloadDirectory: directory,
           };
         break;
       }
@@ -288,7 +289,10 @@ function createWindow() {
       .catch(console.error)
       .finally(() => {
         storage.flush();
-        win.destroy();
+        // Let the close command's IPC reply reach the window before it is destroyed.
+        setTimeout(() => {
+          if (!win.isDestroyed()) win.destroy();
+        }, 0);
       });
   });
   win.on("closed", () => {

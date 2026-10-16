@@ -5,8 +5,8 @@ import {
   type DownloadItem,
   type Session,
 } from "electron";
-import { basename, extname, join } from "node:path";
-import { existsSync } from "node:fs";
+import { basename, extname, isAbsolute, join } from "node:path";
+import { existsSync, mkdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import type { Download, Settings } from "../shared/browser";
 import { isWebUrl } from "../shared/navigation";
@@ -55,27 +55,49 @@ export class Downloads {
         path: "",
       };
       const settings = this.settings();
-      if (!settings.askDownloadLocation && settings.downloadDirectory) {
-        let path = join(settings.downloadDirectory, filename);
-        for (
+      if (
+        !settings.askDownloadLocation &&
+        isAbsolute(settings.downloadDirectory)
+      ) {
+        try {
+          mkdirSync(settings.downloadDirectory, { recursive: true });
+          let path = join(settings.downloadDirectory, filename);
           let i = 1;
-          existsSync(path) ||
-          [...this.records.values()].some((r) => r.path === path);
-          i++
-        )
-          path = join(
-            settings.downloadDirectory,
-            `${basename(filename, extname(filename))} (${i})${extname(filename)}`,
-          );
-        record.path = path;
-        item.setSavePath(path);
+          while (
+            i < 1000 &&
+            (existsSync(path) ||
+              [...this.records.values()].some((r) => r.path === path))
+          ) {
+            path = join(
+              settings.downloadDirectory,
+              `${basename(filename, extname(filename))} (${i})${extname(filename)}`,
+            );
+            i++;
+          }
+          if (
+            existsSync(path) ||
+            [...this.records.values()].some((r) => r.path === path)
+          )
+            path = join(
+              settings.downloadDirectory,
+              `${basename(filename, extname(filename))}-${id.slice(0, 8)}${extname(filename)}`,
+            );
+          record.path = path;
+          item.setSavePath(path);
+        } catch {
+          // Keep Electron's save dialog when the chosen folder cannot be created.
+        }
       }
       this.records.set(id, record);
       let lastUpdate = 0;
       item.on("updated", (_event, state) => {
         record.data.received = item.getReceivedBytes();
         record.data.total = item.getTotalBytes();
-        record.data.state = state === "interrupted" ? "failed" : "progressing";
+        record.data.state = item.isPaused()
+          ? "paused"
+          : state === "interrupted"
+            ? "failed"
+            : "progressing";
         if (Date.now() - lastUpdate > 200) {
           lastUpdate = Date.now();
           this.changed();
@@ -97,13 +119,39 @@ export class Downloads {
     this.registrations.set(ses, onDownload);
     ses.on("will-download", onDownload);
   }
-  async action(id: string, action: "cancel" | "open" | "show" | "remove") {
+  async action(
+    id: string,
+    action: "cancel" | "open" | "show" | "remove" | "pause" | "resume",
+  ) {
     const record = this.records.get(id);
     if (!record) return;
     if (action === "remove") {
       if (record.item)
         throw new Error("Cancel this download before removing its entry.");
       this.records.delete(id);
+      this.changed();
+      return;
+    }
+    if (action === "pause") {
+      if (!record.item || record.item.isPaused()) return;
+      try {
+        record.item.pause();
+      } catch {
+        throw new Error("This download cannot be paused.");
+      }
+      record.data.state = "paused";
+      this.changed();
+      return;
+    }
+    if (action === "resume") {
+      if (!record.item) return;
+      try {
+        record.item.resume();
+      } catch {
+        throw new Error("This download cannot be resumed.");
+      }
+      record.data.state = "progressing";
+      record.data.active = true;
       this.changed();
       return;
     }

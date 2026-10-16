@@ -142,44 +142,49 @@ export class Privacy {
     ses.webRequest.onBeforeRequest(
       { urls: ["http://*/*", "https://*/*", "ws://*/*", "wss://*/*"] },
       (details, callback) => {
-        const settings = this.settings();
-        const wc = details.webContents;
-        const topUrl =
-          details.resourceType === "mainFrame"
-            ? details.url
-            : wc?.getURL() || details.referrer;
-        const isPrivate = !ses.isPersistent();
-        if (!this.siteEnabled(topUrl, isPrivate)) return callback({});
-        if (details.resourceType !== "mainFrame") {
-          const kind = this.filters.match(
-            details.url,
-            details.frame?.url || topUrl || details.url,
-            details.resourceType,
-            settings.adBlocking,
-            settings.trackerProtection,
-          );
-          if (kind) {
-            if (details.webContentsId !== undefined)
-              this.blocked(details.webContentsId, kind);
-            return callback({ cancel: true });
+        try {
+          const settings = this.settings();
+          const wc = details.webContents;
+          const topUrl =
+            details.resourceType === "mainFrame"
+              ? details.url
+              : wc?.getURL() || details.referrer;
+          const isPrivate = !ses.isPersistent();
+          if (!this.siteEnabled(topUrl, isPrivate)) return callback({});
+          if (details.resourceType !== "mainFrame") {
+            const kind = this.filters.match(
+              details.url,
+              details.frame?.url || topUrl || details.url,
+              details.resourceType,
+              settings.adBlocking,
+              settings.trackerProtection,
+            );
+            if (kind) {
+              if (details.webContentsId !== undefined)
+                this.blocked(details.webContentsId, kind);
+              return callback({ cancel: true });
+            }
           }
-        }
-        if (
-          settings.removeTrackingParameters &&
-          details.resourceType === "mainFrame" &&
-          details.method === "GET"
-        ) {
-          const clean = stripTrackingParameters(details.url);
-          if (clean !== details.url) {
-            const count =
-              [...new URL(details.url).searchParams].length -
-              [...new URL(clean).searchParams].length;
-            if (details.webContentsId !== undefined)
-              this.blocked(details.webContentsId, "parameters", count);
-            return callback({ redirectURL: clean });
+          if (
+            settings.removeTrackingParameters &&
+            details.resourceType === "mainFrame" &&
+            details.method === "GET"
+          ) {
+            const clean = stripTrackingParameters(details.url);
+            if (clean !== details.url) {
+              const count =
+                [...new URL(details.url).searchParams].length -
+                [...new URL(clean).searchParams].length;
+              if (details.webContentsId !== undefined)
+                this.blocked(details.webContentsId, "parameters", count);
+              return callback({ redirectURL: clean });
+            }
           }
+          callback({});
+        } catch {
+          // A matcher failure must not leave the request hanging.
+          callback({});
         }
-        callback({});
       },
     );
   }

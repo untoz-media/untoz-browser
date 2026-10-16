@@ -31,7 +31,9 @@ export function isCommand(value: unknown): value is Command {
     case "download":
       return (
         string(c.id, 100) &&
-        ["cancel", "open", "show", "remove"].includes(String(c.action))
+        ["cancel", "open", "show", "remove", "pause", "resume"].includes(
+          String(c.action),
+        )
       );
     case "window":
       return ["minimize", "maximize", "close"].includes(String(c.action));

@@ -71,7 +71,7 @@ export interface Download {
   active: boolean;
   received: number;
   total: number;
-  state: "progressing" | "completed" | "cancelled" | "failed";
+  state: "progressing" | "paused" | "completed" | "cancelled" | "failed";
   private: boolean;
 }
 export interface BrowserState {
@@ -116,7 +116,7 @@ export type Command =
   | {
       type: "download";
       id: string;
-      action: "cancel" | "open" | "show" | "remove";
+      action: "cancel" | "open" | "show" | "remove" | "pause" | "resume";
     }
   | {
       type: "viewport";

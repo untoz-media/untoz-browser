@@ -207,7 +207,29 @@ const assert = require("node:assert/strict");
         "/T",
         "/F",
       ]);
-    else h.app.process().kill("SIGKILL");
+    else {
+      // SIGKILL skips dispose, matching a forced termination. Child processes
+      // must die too; otherwise they keep the profile lock and the next launch hangs.
+      const killTree = (target) => {
+        let children = "";
+        try {
+          children = fs.readFileSync(
+            `/proc/${target}/task/${target}/children`,
+            "utf8",
+          );
+        } catch {
+          /* The process has already exited. */
+        }
+        for (const child of children.trim().split(/\s+/).filter(Boolean))
+          killTree(Number(child));
+        try {
+          process.kill(target, "SIGKILL");
+        } catch {
+          /* Already gone. */
+        }
+      };
+      killTree(pid);
+    }
     await sleep(1500);
     h = await launch(profile);
     state = await h.snapshot();

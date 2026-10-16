@@ -1,15 +1,18 @@
 # Untoz Browser 2026 Roadmap
 
-## Current milestone status — 2026-10-03
+## Current milestone status — 2026-10-16
 
-B001–B011 have working foundations: independent tabs and navigation, default
-privacy controls, local Home, bookmarks/history, downloads, private sessions,
-settings and normal-session restoration. B012–B013 received performance and
-security passes; they remain ongoing release gates, particularly background
-page lifecycle behavior, real-site compatibility and build-tool advisories.
-The next milestone is B014: desktop compatibility and release hardening.
-See `docs/B001-B013-report.md` for exact scope and validation. The older
-quarterly targets below are historical planning, not claims of implemented features.
+B001–B013 foundations are unchanged and remain the source of truth. See
+`docs/B001-B013-report.md`. B014 hardening is in progress; the notes for this
+pass are in `docs/B014-hardening.md`. Electron stays on the supported 44 line
+(44.8.0). Electron 44 is supported until 2027-03-02, so it was not replaced
+with the 45 beta. In-session download pause/resume, private-session cleanup
+failure handling, and two compatible dependency overrides are in place.
+Tailwind 3 and electron-builder still carry dev-only advisories with no safe
+compatible upgrade. Background page lifecycle, the memory target, Windows
+code signing, and a Wine-free NSIS build on Linux remain release gates.
+The older quarterly targets below are historical planning, not claims of
+implemented features.
 
 ## Q1 2026: Foundation & Core Experience
 **Goal**: Establish a solid, performant foundation with core browsing capabilities
