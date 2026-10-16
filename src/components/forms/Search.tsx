@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { AiOutlineSearch } from 'react-icons/ai';
+import React, { useState } from "react";
+import { Search as AiOutlineSearch } from "lucide-react";
 
 interface SearchProps {
   placeholder?: string;
@@ -7,13 +7,13 @@ interface SearchProps {
   className?: string;
 }
 
-const Search = ({ 
-  placeholder = 'Pesquisar ou digitar endereço...',
+const Search = ({
+  placeholder = "Pesquisar ou digitar endereço...",
   onSearch,
-  className = '',
-  ...props 
+  className = "",
+  ...props
 }: SearchProps) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +21,10 @@ const Search = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`relative flex w-full max-w-xl ${className}`}>
+    <form
+      onSubmit={handleSubmit}
+      className={`relative flex w-full max-w-xl ${className}`}
+    >
       <input
         type="text"
         value={query}
@@ -37,9 +40,9 @@ const Search = ({
         <AiOutlineSearch className="text-primary-400 hover:text-primary-500 transition-colors" />
       </button>
     </form>
-  )
+  );
 };
 
-Search.displayName = 'Search';
+Search.displayName = "Search";
 
 export { Search };

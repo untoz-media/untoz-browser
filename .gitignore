@@ -13,5 +13,8 @@ release/
 !.env.example
 
 *.log
+.test-build/
+test-results/
+dependency-audit.json
 .DS_Store
 Thumbs.db

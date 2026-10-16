@@ -1,5 +1,16 @@
 # Untoz Browser 2026 Roadmap
 
+## Current milestone status — 2026-10-03
+
+B001–B011 have working foundations: independent tabs and navigation, default
+privacy controls, local Home, bookmarks/history, downloads, private sessions,
+settings and normal-session restoration. B012–B013 received performance and
+security passes; they remain ongoing release gates, particularly background
+page lifecycle behavior, real-site compatibility and build-tool advisories.
+The next milestone is B014: desktop compatibility and release hardening.
+See `docs/B001-B013-report.md` for exact scope and validation. The older
+quarterly targets below are historical planning, not claims of implemented features.
+
 ## Q1 2026: Foundation & Core Experience
 **Goal**: Establish a solid, performant foundation with core browsing capabilities
 

@@ -1,44 +1,59 @@
 {
   "name": "untoz-browser",
-  "version": "1.0.0",
-  "description": "Untoz Browser - A premium, minimalist, and extremely fast browser",
-  "main": "dist/main.js",
+  "version": "0.1.0-alpha.1",
+  "description": "Untoz Browser",
+  "main": "dist-electron/main.js",
   "author": "Untoz",
   "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "set ELECTRON_BUILDER_SKIP_BINARY_DOWNLOAD=1 && vite build && electron-builder --win portable",
+    "build": "npm run typecheck && npm run licenses && vite build && electron-builder --win portable nsis",
     "preview": "vite preview",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "format": "prettier --write ."
+    "lint": "eslint src electron shared vite.config.ts --ext .ts,.tsx --max-warnings 0",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "build:app": "vite build",
+    "test": "node scripts/test.cjs",
+    "test:electron": "npm run build:app && node scripts/electron-smoke.cjs",
+    "test:dev": "node scripts/dev-smoke.cjs",
+    "package:portable": "electron-builder --win portable",
+    "package:installer": "electron-builder --win nsis",
+    "filters:update": "node scripts/update-filters.cjs",
+    "test:packaged": "node scripts/packaged-smoke.cjs",
+    "test:alpha": "npm run build:app && node scripts/alpha-smoke.cjs",
+    "benchmark": "npm run build:app && node scripts/benchmark.cjs",
+    "test:sites": "npm run build:app && node scripts/website-compat.cjs",
+    "licenses": "node scripts/licenses.cjs",
+    "test:tls": "npm run build:app && node scripts/tls-smoke.cjs"
   },
   "dependencies": {
-    "framer-motion": "^10.12.0",
+    "@ghostery/adblocker": "2.18.2",
     "lucide-react": "^0.263.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.8.0",
     "zustand": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
+    "@types/node": "^24.19.1",
     "@types/react": "^18.0.35",
     "@types/react-dom": "^18.0.11",
-    "@vitejs/plugin-react": "^4.0.0",
-    "autoprefixer": "^10.4.14",
-    "concurrently": "^10.0.3",
-    "cross-env": "^10.1.0",
-    "electron": "^25.0.0",
-    "electron-builder": "^24.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.71.0",
+    "@typescript-eslint/parser": "^8.71.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "autoprefixer": "^10.6.1",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
     "eslint": "^8.38.0",
     "eslint-plugin-react": "^7.32.2",
-    "postcss": "^8.4.21",
-    "tailwindcss": "^3.3.1",
+    "playwright-core": "^1.63.0",
+    "postcss": "^8.5.28",
+    "prettier": "^3.9.9",
+    "tailwindcss": "^3.4.19",
     "typescript": "^5.0.3",
-    "vite": "^4.3.0",
-    "vite-plugin-electron": "^0.12.0",
-    "vite-plugin-node-polyfills": "^0.28.0"
+    "vite": "^7.3.6",
+    "vite-plugin-electron": "^0.12.0"
   },
   "build": {
     "appId": "com.untoz.browser",
@@ -48,15 +63,42 @@
     },
     "files": [
       "dist/**/*",
-      "node_modules/**/*"
+      "dist-electron/**/*",
+      "resources/**/*"
     ],
     "win": {
-      "target": "portable",
-      "sign": false
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "icon": "assets/logo/icon.png",
+      "signAndEditExecutable": true
     },
     "mac": {
-      "target": "default",
-      "sign": false
-    }
+      "target": "default"
+    },
+    "copyright": "\u00a9 2026 Untoz",
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "Untoz Browser Setup ${version}.${ext}",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "Untoz Browser Portable ${version}.${ext}"
+    },
+    "extraResources": [
+      {
+        "from": "resources/licenses",
+        "to": "licenses"
+      }
+    ]
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

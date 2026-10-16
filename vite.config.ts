@@ -1,55 +1,60 @@
-import { defineConfig } from 'vite';
-import electronPlugin from 'vite-plugin-electron';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { defineConfig } from "vite";
+import electronPlugin from "vite-plugin-electron";
+import react from "@vitejs/plugin-react";
+import { resolve } from "path";
+import { randomBytes } from "node:crypto";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+const devNonce = randomBytes(18).toString("base64");
+export default defineConfig(({ command }) => ({
+  base: "./",
+  html: command === "serve" ? { cspNonce: devNonce } : undefined,
   plugins: [
-    electronPlugin({
-      entry: 'electron/main.ts',
-      preload: 'electron/preload.ts',
-      vite: {
-        build: {
-          outDir: 'dist'
-        }
-      }
-    }),
+    {
+      name: "untoz-dev-csp",
+      apply: "serve",
+      transformIndexHtml(html) {
+        return html.replace(
+          "script-src 'self'",
+          `script-src 'self' 'nonce-${devNonce}'`,
+        );
+      },
+    },
+    electronPlugin([
+      {
+        entry: "electron/main.ts",
+        onstart(args) {
+          // The plugin's default adds --no-sandbox. Always retain Chromium's sandbox.
+          if (process.env.UNTOZ_DEV_NO_LAUNCH !== "1")
+            return args.startup(["."]);
+        },
+      },
+      {
+        entry: "electron/preload.ts",
+        onstart(args) {
+          args.reload();
+        },
+      },
+    ]),
     react(),
-    nodePolyfills()
   ],
   resolve: {
     alias: {
-      '@': '/src',
-      '@core': '/src/core',
-      '@navigation': '/src/navigation',
-      '@tabs': '/src/tabs',
-      '@address-bar': '/src/address-bar',
-      '@bookmarks': '/src/bookmarks',
-      '@history': '/src/history',
-      '@downloads': '/src/downloads',
-      '@themes': '/src/themes',
-      '@settings': '/src/settings',
-      '@untoz-universe': '/src/untoz-universe',
-      '@workspace': '/src/workspace',
-      '@extensions': '/src/extensions',
-      '@developer-tools': '/src/developer-tools',
-      '@ai': '/src/ai',
-      '@cloud': '/src/cloud'
-    }
+      "@": resolve(__dirname, "src"),
+    },
   },
   server: {
+    host: "127.0.0.1",
     port: 3000,
-    strictPort: true
+    strictPort: true,
   },
   build: {
-    outDir: 'dist',
+    outDir: "dist",
     sourcemap: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html')
-      }
-    }
-  }
-});
+        main: resolve(__dirname, "index.html"),
+      },
+    },
+  },
+}));

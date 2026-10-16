@@ -1,56 +1,87 @@
-import { create } from 'zustand';
-
-interface Tab {
-  id: string;
-  url: string;
-  title: string;
-  favicon?: string;
+import { create } from "zustand";
+import {
+  DEFAULT_SETTINGS,
+  type BrowserState,
+  type Command,
+} from "../../shared/browser";
+export type Panel =
+  | "bookmarks"
+  | "history"
+  | "downloads"
+  | "settings"
+  | "privacy"
+  | "about"
+  | null;
+interface State extends BrowserState {
+  ready: boolean;
+  panel: Panel;
+  error?: string;
+  setPanel: (panel: Panel) => void;
 }
-
-interface TabsStore {
-  tabs: Tab[];
-  activeTabId: string | null;
-  addTab: (url: string, title?: string) => void;
-  removeTab: (id: string) => void;
-  setActiveTab: (id: string) => void;
-  updateTab: (id: string, updates: Partial<Tab>) => void;
-}
-
-export const useTabsStore = create<TabsStore>((set, get) => ({
-  tabs: [
-    { id: '1', url: 'https://www.untoz.com', title: 'Untoz' },
-  ],
-  activeTabId: '1',
-  addTab: (url, title = 'New Tab') => {
-    const id = Math.random().toString(36).substr(2, 9);
-    set(state => {
-      const newTab = { id, url, title };
-      return {
-        tabs: [...state.tabs, newTab],
-        activeTabId: id,
-      };
-    });
-  },
-  removeTab: (id) => {
-    set(state => {
-      const tabs = state.tabs.filter(tab => tab.id !== id);
-      let activeTabId = state.activeTabId;
-      if (activeTabId === id) {
-        // activate the next tab, or the previous if none
-        const remaining = tabs.find(t => t.id !== id);
-        activeTabId = remaining ? remaining.id : null;
-      }
-      return { tabs, activeTabId };
-    });
-  },
-  setActiveTab: (id) => {
-    set({ activeTabId: id });
-  },
-  updateTab: (id, updates) => {
-    set(state => ({
-      tabs: state.tabs.map(tab =>
-        tab.id === id ? { ...tab, ...updates } : tab
-      ),
-    }));
-  },
+export const useTabsStore = create<State>((set) => ({
+  tabs: [],
+  activeTabId: "",
+  bookmarks: [],
+  history: [],
+  quickLinks: [],
+  downloads: [],
+  settings: DEFAULT_SETTINGS,
+  ready: false,
+  panel: null,
+  setPanel: (panel) => set({ panel }),
 }));
+export async function send(command: Command) {
+  try {
+    if (!window.untozBrowser)
+      throw new Error("Open Untoz in the desktop app to browse.");
+    await window.untozBrowser.command(command);
+    if (command.type !== "viewport")
+      useTabsStore.setState({ error: undefined });
+  } catch (error) {
+    useTabsStore.setState({
+      error:
+        error instanceof Error
+          ? error.message.replace(
+              /^Error invoking remote method '[^']+': Error: /,
+              "",
+            )
+          : "The action could not be completed.",
+    });
+  }
+}
+export function connectBrowser() {
+  const api = window.untozBrowser;
+  if (!api) {
+    useTabsStore.setState({
+      ready: true,
+      error: "Desktop browser features require Electron. Use npm run dev.",
+    });
+    return () => {};
+  }
+  let live = true;
+  let initialized = false;
+  const pending: Partial<BrowserState>[] = [];
+  const unsubscribe = api.onState((state) => {
+    if (!live) return;
+    if (!initialized) pending.push(state);
+    else useTabsStore.setState(state);
+  });
+  void api
+    .snapshot()
+    .then((state) => {
+      if (live) {
+        useTabsStore.setState({
+          ...Object.assign(state, ...pending),
+          ready: true,
+        });
+        initialized = true;
+      }
+    })
+    .catch((error) =>
+      useTabsStore.setState({ error: String(error), ready: true }),
+    );
+  return () => {
+    live = false;
+    unsubscribe();
+  };
+}

@@ -1,89 +1,73 @@
-import { useState } from 'react';
-import { useTabsStore } from '@/store/useTabsStore';
-import { TopNavigationBar } from '@/components/navigation/TopNavigationBar';
-import { Sidebar } from '@/components/navigation/Sidebar';
-import { Tabs } from '@/components/ui/Tabs';
-import { WebView } from '@/components/ui/WebView';
-
-export const App = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { tabs, activeTabId } = useTabsStore();
-
+import { useEffect } from "react";
+import { connectBrowser, send, useTabsStore } from "@/store/useTabsStore";
+import { TopNavigationBar } from "@/components/navigation/TopNavigationBar";
+import { Sidebar } from "@/components/navigation/Sidebar";
+import { Tabs } from "@/components/ui/Tabs";
+import { WebView } from "@/components/ui/WebView";
+import { IconButton } from "@/components/ui/IconButton";
+import { Panels } from "@/pages/Panels";
+import { Minus, Square, X } from "lucide-react";
+import icon from "../assets/logo/icon.png";
+export default function App() {
+  const privateTab = useTabsStore(
+    (s) => !!s.tabs.find((t) => t.id === s.activeTabId)?.private,
+  );
+  const theme = useTabsStore((s) => s.settings.theme);
+  const panel = useTabsStore((s) => s.panel);
+  const error = useTabsStore((s) => s.error || s.storageError);
+  useEffect(connectBrowser, []);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.private = String(privateTab);
+  }, [theme, privateTab]);
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Header with Top Navigation Bar */}
-      <header className={`
-        bg-background/90 backdrop-blur-xl border-b border-border/10
-        backdrop-brightness-95
-      `}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between">
-            {/* Logo/Brand */}
-            <div className="flex-shrink-0 flex items-center space-x-2">
-              <div className="h-7 w-7 flex items-center justify-center bg-primary/20 rounded-lg">
-                <span className="text-primary text-sm font-bold">U</span>
-              </div>
-              <span className="text-foreground/90 font-semibold text-base whitespace-nowrap">
-                Untoz
-              </span>
-            </div>
-
-            {/* Top Navigation Bar */}
-            <TopNavigationBar />
-          </div>
+    <div className="browser-shell">
+      <header className="titlebar app-drag">
+        <div className="brand">
+          <img src={icon} alt="" />
+          <strong>Untoz</strong>
+        </div>
+        <Tabs />
+        <div className="window-controls app-no-drag">
+          <IconButton
+            aria-label="Minimize"
+            onClick={() => void send({ type: "window", action: "minimize" })}
+          >
+            <Minus size={15} />
+          </IconButton>
+          <IconButton
+            aria-label="Maximize or restore"
+            onClick={() => void send({ type: "window", action: "maximize" })}
+          >
+            <Square size={13} />
+          </IconButton>
+          <IconButton
+            aria-label="Close window"
+            onClick={() => void send({ type: "window", action: "close" })}
+          >
+            <X size={17} />
+          </IconButton>
         </div>
       </header>
-
-      {/* Main content area */}
-      <main className="flex-1 flex">
-        {/* Sidebar */}
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
-
-        {/* Main panel */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Tab bar */}
-          <div className={`
-            border-b border-border/10
-            bg-background/80 backdrop-blur-lg
-          `}>
-            <Tabs tabs={tabs} activeTabId={activeTabId} />
-          </div>
-
-          {/* Web view */}
-          <div className="flex-1 overflow-hidden">
-            {activeTabId ? (
-              <WebView url={tabs.find(t => t.id === activeTabId)?.url ?? ''} />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-foreground/40">
-                <div className="text-center space-y-2">
-                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary text-lg font-medium">
-                    U
-                  </div>
-                  <p className="text-sm font-medium">Nenhuma aba ativa</p>
-                  <p className="text-xs text-foreground/30">Clique no + para abrir uma nova aba</p>
-                </div>
-              </div>
-            )}
-          </div>
+      <TopNavigationBar />
+      {error && (
+        <div role="alert" className="notice">
+          {error}
+          <button
+            onClick={() => useTabsStore.setState({ error: undefined })}
+            aria-label="Dismiss message"
+          >
+            ×
+          </button>
+        </div>
+      )}
+      <main className="browser-main">
+        <Sidebar />
+        <div className="browser-content">
+          <WebView />
+          {panel && <Panels />}
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className={`
-        bg-background/90 backdrop-blur-xl border-t border-border/10
-        backdrop-brightness-95
-      `}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="text-center text-xs text-foreground/40">
-            © {new Date().getFullYear()} Untoz Browser. Todos os direitos reservados.
-          </div>
-        </div>
-      </footer>
     </div>
   );
-};
-
-export default App;
+}

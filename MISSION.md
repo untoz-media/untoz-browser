@@ -1,5 +1,13 @@
 # Untoz Browser Mission Document
 
+## Current implementation priority — 2026-10-03
+
+The active scope is lightweight everyday browsing and privacy by default. Local
+New Tab, normal/private browsing, bookmarks, history, downloads and working
+settings take priority over the long-term ecosystem concepts below. No AI,
+feeds, telemetry or cloud services are part of the current browser foundation.
+See `docs/B001-B013-report.md` for verified behavior and remaining limitations.
+
 ## Vision
 Untoz Browser aims to become the premier gateway to the digital world—a blazing-fast, privacy-first, beautifully crafted browsing experience that seamlessly integrates with the entire Untoz ecosystem. We envision a browser that doesn't just display web content, but enhances productivity, creativity, and digital well-being through thoughtful design and intelligent features that feel native to the Untoz experience.
 

@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-electron
+release
+.test-build
+test-results
+package-lock.json
+dependency-audit.json
+*.log

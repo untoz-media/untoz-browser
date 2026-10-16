@@ -1,5 +1,18 @@
 # Untoz Browser
 
+Current browser foundation (B001–B013): independent native tabs, local New Tab,
+bookmarks/history, private sessions, download management, working settings and
+privacy defaults. See [the implementation and validation report](docs/B001-B013-report.md).
+
+Use Node.js 22.12+ (tested with Node 24). Run `npm install`, then `npm run dev`.
+`npm run build` produces the Windows portable executable under `release/`.
+Checks: `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:electron`,
+and `npm run test:dev`. Integration tests use temporary isolated profiles.
+Close the dev server before running build/integration scripts; both emit to
+`dist-electron/`. For a separate profile, launch with `--user-data-dir=<absolute path>`.
+
+No account, cloud sync, telemetry, generated art, or AI components are required.
+
 > A premium, minimalist desktop browser built by Untoz.
 
 Untoz Browser is a modern desktop web browser designed around speed, simplicity, privacy, and a seamless connection to the Untoz ecosystem.
@@ -45,7 +58,7 @@ Untoz Browser is built using modern web and desktop technologies.
 | **Vite** | Development server and build tooling |
 | **Tailwind CSS** | UI styling |
 | **Zustand** | Application state management |
-| **Framer Motion** | Animations and interactions |
+| **Native WebContentsView** | Independent Chromium pages |
 
 ---
 

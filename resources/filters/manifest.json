@@ -1,0 +1,20 @@
+{
+  "fetchedAt": "2026-10-03T17:41:50.572Z",
+  "engine": "2.18.2",
+  "lists": [
+    {
+      "name": "easylist",
+      "url": "https://easylist.to/easylist/easylist.txt",
+      "bytes": 1944353,
+      "sha256": "3db4e9c13d4103f883644ef218309d062d1436448e11c6917a697e281dd0d2cd",
+      "sourceSha256": "e173ad8103d149929d39207bcdac5db6140c39100bb525bc50555a235442ad35"
+    },
+    {
+      "name": "easyprivacy",
+      "url": "https://easylist.to/easylist/easyprivacy.txt",
+      "bytes": 2236993,
+      "sha256": "201e10e727af9296820511b16d2bb40d3b29a42533847bfb01a97b520a484a00",
+      "sourceSha256": "6b05469ae2dd5fa020b87014d6955b6766fb72648aeeaacc3a82a4ce7d14270c"
+    }
+  ]
+}

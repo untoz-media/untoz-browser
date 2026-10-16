@@ -1,23 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { X } from "lucide-react";
 
 interface ToastProps {
   title: string;
   description?: string;
-  variant?: 'default' | 'destructive';
+  variant?: "default" | "destructive";
   onOpenChange?: (open: boolean) => void;
   className?: string;
 }
 
 const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
-  ({
-    title,
-    description,
-    variant = 'default',
-    onOpenChange,
-    className = '',
-    children,
-  }, ref) => {
+  (
+    { title, description, variant = "default", onOpenChange, className = "" },
+    ref,
+  ) => {
     const [open, setOpen] = useState(true);
     const hideTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -52,20 +48,42 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
         {/* Toast Container */}
         <div
           className={`flex w-full max-w-xs items-center gap-4 rounded-border border p-4 shadow-lg 
-                   ${variant === 'destructive'
-                     ? 'border-destructive/50 bg-destructive text-destructive-foreground'
-                     : 'border-background/50 bg-background text-foreground'}
+                   ${
+                     variant === "destructive"
+                       ? "border-destructive/50 bg-destructive text-destructive-foreground"
+                       : "border-background/50 bg-background text-foreground"
+                   }
                    backdrop-blur-sm`}
         >
           {/* Icon */}
           <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center">
-            {variant === 'destructive' ? (
-              <svg className="h-4 w-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            {variant === "destructive" ? (
+              <svg
+                className="h-4 w-4 text-destructive"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             ) : (
-              <svg className="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3 3 0 014.438 0 3.42 3.42 0 001.946.806 3 3 0 014.438 0 3.42 3.42 0 001.946.806 3 3 0 014.438 0V16a3 3 0 01-3 3H6a3 3 0 01-3-3V4.697z" />
+              <svg
+                className="h-4 w-4 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3 3 0 014.438 0 3.42 3.42 0 001.946.806 3 3 0 014.438 0 3.42 3.42 0 001.946.806 3 3 0 014.438 0V16a3 3 0 01-3 3H6a3 3 0 01-3-3V4.697z"
+                />
               </svg>
             )}
           </div>
@@ -88,10 +106,10 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
           </button>
         </div>
       </div>
-    )
-  }
+    );
+  },
 );
 
-Toast.displayName = 'Toast';
+Toast.displayName = "Toast";
 
 export { Toast };

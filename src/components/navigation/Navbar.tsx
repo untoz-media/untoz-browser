@@ -1,12 +1,11 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import React from "react";
 
 interface NavbarProps {
   className?: string;
   children?: React.ReactNode;
 }
 
-const Navbar = ({ className = '', children, ...props }: NavbarProps) => {
+const Navbar = ({ className = "", children, ...props }: NavbarProps) => {
   return (
     <nav
       className={`fixed left-0 right-0 top-0 z-30 flex h-16 items-center justify-between px-4 py-2 bg-background/50 backdrop-blur-md border-b border-border/50 sm:px-6 lg:px-8 ${className}`}
@@ -18,22 +17,31 @@ const Navbar = ({ className = '', children, ...props }: NavbarProps) => {
           <div className="h-8 w-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">U</span>
           </div>
-          <span class="text-xl font-bold text-white">Untoz Browser</span>
+          <span className="text-xl font-bold text-white">Untoz Browser</span>
         </div>
       </div>
 
       <div className="hidden md:flex-1 flex items-center justify-center">
         {/* Navigation Links */}
         <div className="flex space-x-4">
-          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <a
+            href="/"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
             Início
-          </Link>
-          <Link to="/features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          </a>
+          <a
+            href="/features"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
             Recursos
-          </Link>
-          <Link to="/community" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          </a>
+          <a
+            href="/community"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
             Comunidade
-          </Link>
+          </a>
         </div>
       </div>
 
@@ -42,9 +50,9 @@ const Navbar = ({ className = '', children, ...props }: NavbarProps) => {
         {children}
       </div>
     </nav>
-  )
+  );
 };
 
-Navbar.displayName = 'Navbar';
+Navbar.displayName = "Navbar";
 
 export { Navbar };

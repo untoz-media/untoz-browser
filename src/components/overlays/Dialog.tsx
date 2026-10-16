@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect, useRef } from "react";
 
 interface DialogProps {
   open: boolean;
@@ -36,14 +35,10 @@ interface DialogDescriptionProps {
 }
 
 const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(
-  ({
-    open,
-    onOpenChange,
-    title,
-    description,
-    children,
-    className = '',
-  }, ref) => {
+  (
+    { open, onOpenChange, title, description, children, className = "" },
+    ref,
+  ) => {
     const mounted = useRef(false);
 
     useEffect(() => {
@@ -57,19 +52,19 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(
     // Handle Escape key
     useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
+        if (e.key === "Escape") {
           onOpenChange(false);
         }
       };
 
       if (open) {
-        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener("keydown", handleKeyDown);
       } else {
-        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener("keydown", handleKeyDown);
       }
 
       return () => {
-        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener("keydown", handleKeyDown);
       };
     }, [open, onOpenChange]);
 
@@ -80,7 +75,7 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(
       }
     };
 
-    if (!mounted) return null;
+    if (!open) return null;
 
     return (
       <div
@@ -89,7 +84,10 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(
         onClick={handleBackdropClick}
       >
         {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          aria-hidden="true"
+        />
 
         {/* Dialog Panel */}
         <div
@@ -106,11 +104,17 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(
           {/* Header */}
           {title && (
             <div className="mb-4">
-              <h2 id="dialog-title" className="text-lg font-semibold leading-none text-foreground">
+              <h2
+                id="dialog-title"
+                className="text-lg font-semibold leading-none text-foreground"
+              >
                 {title}
               </h2>
               {description && (
-                <p id="dialog-description" className="mt-1 text-sm text-muted-foreground">
+                <p
+                  id="dialog-description"
+                  className="mt-1 text-sm text-muted-foreground"
+                >
                   {description}
                 </p>
               )}
@@ -133,37 +137,25 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
-Dialog.displayName = 'Dialog';
+Dialog.displayName = "Dialog";
 
 const DialogTrigger = React.forwardRef<HTMLButtonElement, DialogTriggerProps>(
-  ({
-    children,
-    className = '',
-    ...props
-  }, ref) => {
+  ({ children, className = "", ...props }, ref) => {
     return (
-      <button
-        ref={ref}
-        className={`${className}`}
-        {...props}
-      >
+      <button ref={ref} className={`${className}`} {...props}>
         {children}
       </button>
     );
-  }
+  },
 );
 
-DialogTrigger.displayName = 'DialogTrigger';
+DialogTrigger.displayName = "DialogTrigger";
 
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
-  ({
-    className = '',
-    children,
-    ...props
-  }, ref) => {
+  ({ className = "", children, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -173,17 +165,13 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
         {children}
       </div>
     );
-  }
+  },
 );
 
-DialogContent.displayName = 'DialogContent';
+DialogContent.displayName = "DialogContent";
 
 const DialogHeader = React.forwardRef<HTMLDivElement, DialogHeaderProps>(
-  ({
-    className = '',
-    children,
-    ...props
-  }, ref) => {
+  ({ className = "", children, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -193,46 +181,43 @@ const DialogHeader = React.forwardRef<HTMLDivElement, DialogHeaderProps>(
         {children}
       </div>
     );
-  }
+  },
 );
 
-DialogHeader.displayName = 'DialogHeader';
+DialogHeader.displayName = "DialogHeader";
 
 const DialogTitle = React.forwardRef<HTMLHeadingElement, DialogTitleProps>(
-  ({
-    className = '',
-    children,
-    ...props
-  }, ref) => {
+  ({ className = "", children, ...props }, ref) => {
     return (
       <h2
         ref={ref}
-        className={`${className} text-lg font-semibold leading-none text-foreground`}>
+        className={`${className} text-lg font-semibold leading-none text-foreground`}
+        {...props}
+      >
         {children}
       </h2>
     );
-  }
+  },
 );
 
-DialogTitle.displayName = 'DialogTitle';
+DialogTitle.displayName = "DialogTitle";
 
-const DialogDescription = React.forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
-  ({
-    className = '',
-    children,
-    ...props
-  }, ref) => {
-    return (
-      <p
-        ref={ref}
-        className={`${className} mt-1 text-sm text-muted-foreground`}>
-        {children}
-      </p>
-    );
-  }
-);
+const DialogDescription = React.forwardRef<
+  HTMLParagraphElement,
+  DialogDescriptionProps
+>(({ className = "", children, ...props }, ref) => {
+  return (
+    <p
+      ref={ref}
+      className={`${className} mt-1 text-sm text-muted-foreground`}
+      {...props}
+    >
+      {children}
+    </p>
+  );
+});
 
-DialogDescription.displayName = 'DialogDescription';
+DialogDescription.displayName = "DialogDescription";
 
 export {
   Dialog,
@@ -246,5 +231,5 @@ export {
   type DialogContentProps,
   type DialogHeaderProps,
   type DialogTitleProps,
-  type DialogDescriptionProps
+  type DialogDescriptionProps,
 };

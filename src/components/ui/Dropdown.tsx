@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface DropdownProps {
   children: React.ReactNode;
-  trigger: React.ReactNode;
-  align?: 'start' | 'center' | 'end';
+  trigger: React.ReactNode | ((state: { open: boolean }) => React.ReactNode);
+  align?: "start" | "center" | "end";
   sideOffset?: number;
   alignOffset?: number;
   collisionPadding?: number;
@@ -11,28 +11,33 @@ interface DropdownProps {
 }
 
 interface DropdownTriggerProps {
+  className?: string;
   children: React.ReactNode;
   open: boolean;
 }
 
 interface DropdownContentProps {
+  className?: string;
   children: React.ReactNode;
-  align: 'start' | 'center' | 'end';
+  align: "start" | "center" | "end";
   sideOffset: number;
   alignOffset: number;
   collisionPadding: number;
 }
 
-const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
-  ({
-    children,
-    trigger,
-    align = 'start',
-    sideOffset = 4,
-    alignOffset = 0,
-    collisionPadding = 4,
-    className = '',
-  }, ref) => {
+const DropdownRoot = React.forwardRef<HTMLDivElement, DropdownProps>(
+  (
+    {
+      children,
+      trigger,
+      align = "start",
+      sideOffset = 4,
+      alignOffset = 0,
+      collisionPadding = 4,
+      className = "",
+    },
+    ref,
+  ) => {
     const [open, setOpen] = useState(false);
 
     return (
@@ -45,30 +50,36 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
             setOpen(!open);
           }}
         >
-          {(typeof trigger === 'function') ? trigger({ open }) : trigger}
+          {typeof trigger === "function" ? trigger({ open }) : trigger}
         </div>
 
         {open && (
           <div
             className={`absolute z-50 mt-2 w-56 origin-top-left rounded-md bg-popover p-1 shadow-lg backdrop-blur-md 
                       ring-1 ring-black ring-opacity-5 focus:outline-none 
-                      ${["left", "center", "right"].includes(align) ? `transform-${align}` : ''}`}
+                      ${["left", "center", "right"].includes(align) ? `transform-${align}` : ""}`}
             style={{
-              left: 0,
-              top: '100%',
+              left: alignOffset,
+              top: `calc(100% + ${sideOffset}px)`,
+              padding: collisionPadding,
             }}
           >
-            <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
+            <div
+              className="py-1"
+              role="menu"
+              aria-orientation="vertical"
+              aria-labelledby="menu-button"
+            >
               {children}
             </div>
           </div>
         )}
       </div>
-    )
-  }
+    );
+  },
 );
 
-Dropdown.displayName = 'Dropdown';
+DropdownRoot.displayName = "Dropdown";
 
 interface DropdownTriggerProps {
   children: React.ReactNode;
@@ -76,7 +87,7 @@ interface DropdownTriggerProps {
 }
 
 const DropdownTrigger = React.forwardRef<HTMLDivElement, DropdownTriggerProps>(
-  ({ children, className = '', ...props }, ref) => (
+  ({ children, className = "", ...props }, ref) => (
     <div
       ref={ref}
       className={`inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium 
@@ -86,17 +97,17 @@ const DropdownTrigger = React.forwardRef<HTMLDivElement, DropdownTriggerProps>(
     >
       {children}
     </div>
-  )
+  ),
 );
 
-DropdownTrigger.displayName = 'DropdownTrigger';
+DropdownTrigger.displayName = "DropdownTrigger";
 
 interface DropdownContentProps {
   children: React.ReactNode;
 }
 
 const DropdownContent = React.forwardRef<HTMLDivElement, DropdownContentProps>(
-  ({ children, className = '', ...props }, ref) => (
+  ({ children, className = "", ...props }, ref) => (
     <div
       ref={ref}
       className={`relative z-50 mx-auto max-w-xs w-full origin-top-left rounded-md bg-popover p-1 shadow-lg backdrop-blur-md 
@@ -107,17 +118,19 @@ const DropdownContent = React.forwardRef<HTMLDivElement, DropdownContentProps>(
                ${className}`}
       role="menu"
       aria-orientation="vertical"
-      tabindex={-1}
+      tabIndex={-1}
       {...props}
     >
       {children}
     </div>
-  )
+  ),
 );
 
-DropdownContent.displayName = 'DropdownContent';
+DropdownContent.displayName = "DropdownContent";
 
-Dropdown.Trigger = DropdownTrigger;
-Dropdown.Content = DropdownContent;
+const Dropdown = Object.assign(DropdownRoot, {
+  Trigger: DropdownTrigger,
+  Content: DropdownContent,
+});
 
 export { Dropdown };
