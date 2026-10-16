@@ -178,6 +178,7 @@ export class Tabs {
     tab.view = view;
     this.window.contentView.addChildView(view);
     view.setVisible(false);
+    this.applyPrivacyPreferences(view.webContents);
     const wc = view.webContents;
     this.shortcuts(wc);
     wc.on("context-menu", (_event, params) => {
@@ -507,6 +508,18 @@ export class Tabs {
         "Private data could not be cleared. Restart Untoz before opening another private tab.",
       );
     }
+  }
+  applyPrivacyPreferences(target?: WebContents) {
+    const policy = this.storage.data.settings.fingerprintingProtection
+      ? "disable_non_proxied_udp"
+      : "default";
+    const contents = target
+      ? [target]
+      : [...this.entries.values()]
+          .map((tab) => tab.view?.webContents)
+          .filter((wc): wc is WebContents => !!wc && !wc.isDestroyed());
+    for (const wc of contents)
+      if (!wc.isDestroyed()) wc.setWebRTCIPHandlingPolicy(policy);
   }
   viewport(bounds: typeof this.bounds, visible: boolean) {
     if (

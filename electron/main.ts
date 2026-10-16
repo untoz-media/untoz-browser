@@ -48,6 +48,7 @@ function snapshot(): BrowserState {
     bookmarks: storage.data.bookmarks,
     history: storage.data.history,
     quickLinks: storage.data.quickLinks,
+    workspaces: storage.data.workspaces,
     downloads: tabs.downloads.snapshot(),
     storageError: storage.error,
     about: {
@@ -81,6 +82,8 @@ function publish() {
     if (state.history !== previousState?.history) patch.history = state.history;
     if (state.quickLinks !== previousState?.quickLinks)
       patch.quickLinks = state.quickLinks;
+    if (state.workspaces !== previousState?.workspaces)
+      patch.workspaces = state.workspaces;
     previousState = state;
     mainWindow.webContents.send(IPC.state, patch);
   }, 50);
@@ -207,6 +210,42 @@ function registerIPC() {
           storage.data.settings,
         );
         tabs.persist();
+        tabs.applyPrivacyPreferences();
+        break;
+      case "save-workspace": {
+        const name = command.name.trim().slice(0, 40);
+        if (!name) throw new Error("Enter a workspace name.");
+        const urls = tabs
+          .snapshot()
+          .filter((tab) => !tab.private && isWebUrl(tab.url))
+          .map((tab) => tab.url)
+          .slice(0, 30);
+        if (!urls.length)
+          throw new Error("Open a page before saving a workspace.");
+        storage.data.workspaces = [
+          { id: randomUUID(), name, urls },
+          ...storage.data.workspaces,
+        ].slice(0, 20);
+        break;
+      }
+      case "open-workspace": {
+        const workspace = storage.data.workspaces.find(
+          (item) => item.id === command.id,
+        );
+        if (!workspace) break;
+        let first = "";
+        for (const url of workspace.urls) {
+          if (tabs.entries.size >= 100) break;
+          const id = tabs.create(url, false, false);
+          if (!first && id) first = id;
+        }
+        if (first) tabs.activate(first);
+        break;
+      }
+      case "remove-workspace":
+        storage.data.workspaces = storage.data.workspaces.filter(
+          (item) => item.id !== command.id,
+        );
         break;
       case "add-quick-link":
         if (!isWebUrl(command.url) || !command.title.trim())
@@ -289,10 +328,12 @@ function createWindow() {
       .catch(console.error)
       .finally(() => {
         storage.flush();
-        // Let the close command's IPC reply reach the window before it is destroyed.
+        if (!win.isDestroyed()) win.hide();
+        // Dispose can finish in a microtask. Give the close command's reply
+        // time to reach the renderer before the window is destroyed.
         setTimeout(() => {
           if (!win.isDestroyed()) win.destroy();
-        }, 0);
+        }, 200);
       });
   });
   win.on("closed", () => {

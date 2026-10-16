@@ -14,7 +14,11 @@ const { tmpdir } = require("node:os");
   });
   try {
     const page = await app.firstWindow();
-    await page.getByRole("heading", { name: "Untoz Browser" }).waitFor();
+    await page
+      .getByRole("heading", {
+        name: /Good (morning|afternoon|evening), Luis\./,
+      })
+      .waitFor();
     const state = await page.evaluate(() => window.untozBrowser.snapshot());
     if (state.tabs.length !== 1 || state.tabs[0].url !== "untoz://newtab")
       throw new Error("Packaged startup failed");

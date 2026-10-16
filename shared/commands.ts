@@ -22,6 +22,11 @@ export function isCommand(value: unknown): value is Command {
       return string(c.url);
     case "add-quick-link":
       return string(c.title, 100) && string(c.url);
+    case "save-workspace":
+      return string(c.name, 40);
+    case "open-workspace":
+    case "remove-workspace":
+      return string(c.id, 100);
     case "settings":
       return (
         !!c.settings &&

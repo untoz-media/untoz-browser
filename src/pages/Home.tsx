@@ -1,10 +1,37 @@
 import { useState } from "react";
-import { ArrowRight, Plus, X, Lock } from "lucide-react";
+import {
+  Plus,
+  X,
+  Lock,
+  Play,
+  Clapperboard,
+  Building2,
+  Cloud,
+  Search,
+} from "lucide-react";
 import { send, useTabsStore } from "@/store/useTabsStore";
 import { SEARCH_ENGINES } from "../../shared/search";
+import { PRODUCT_LINKS } from "../../shared/links";
+import wave from "../assets/wave.svg";
+
+const TILE_ICONS: Record<string, typeof Play> = {
+  "untoz-plus": Play,
+  studio: Clapperboard,
+  hq: Building2,
+  cloud: Cloud,
+};
+
+function greeting(now = new Date()) {
+  const hour = now.getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 export function Home() {
   const links = useTabsStore((s) => s.quickLinks);
   const engine = useTabsStore((s) => s.settings.searchEngine);
+  const name = useTabsStore((s) => s.settings.profileName);
   const privateTab = useTabsStore(
     (s) => s.tabs.find((t) => t.id === s.activeTabId)?.private,
   );
@@ -12,24 +39,22 @@ export function Home() {
   const [adding, setAdding] = useState(false);
   return (
     <section className="home-page">
+      <img className="home-wave" src={wave} alt="" />
       <div className="home-inner">
-        <div className="eyebrow">
-          {privateTab ? (
-            <>
-              <Lock size={14} /> PRIVATE BROWSING
-            </>
-          ) : (
-            "A LITTLE SPACE. A WORLD OF POSSIBILITIES."
-          )}
-        </div>
+        {privateTab && (
+          <div className="eyebrow">
+            <Lock size={14} /> PRIVATE BROWSING
+          </div>
+        )}
         <h1>
-          Untoz <span>Browser</span>
+          {greeting()}, {name}.
         </h1>
         <p className="home-subtitle">Your universe, in a new window.</p>
         <form
           className="home-search"
           onSubmit={(e) => {
             e.preventDefault();
+            if (!query.trim()) return;
             void send({ type: "navigate", input: query });
           }}
         >
@@ -40,37 +65,43 @@ export function Home() {
             onChange={(e) => setQuery(e.target.value)}
           />
           <button aria-label="Search">
-            <ArrowRight size={22} />
+            <Search size={18} />
           </button>
         </form>
         <p className="search-caption">
-          Search with {SEARCH_ENGINES[engine].label}
+          Search with {SEARCH_ENGINES[engine].label}. Shortcuts open public
+          pages on this device.
         </p>
         <div className="quick-links">
-          {links.map((link) => (
-            <div className="quick-link" key={link.id}>
-              <button
-                onClick={() => void send({ type: "navigate", input: link.url })}
-              >
-                <span className="link-initial">
-                  {link.title.charAt(0).toUpperCase()}
-                </span>
-                {link.title}
-              </button>
-              <button
-                className="remove-link"
-                aria-label={`Remove ${link.title}`}
-                onClick={() =>
-                  void send({ type: "remove-quick-link", id: link.id })
-                }
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ))}
+          {links.map((link) => {
+            const Icon = TILE_ICONS[link.id];
+            return (
+              <div className="quick-link" key={link.id}>
+                <button
+                  onClick={() =>
+                    void send({ type: "navigate", input: link.url })
+                  }
+                >
+                  <span className="link-initial">
+                    {Icon ? <Icon size={16} /> : link.title.charAt(0)}
+                  </span>
+                  {link.title}
+                </button>
+                <button
+                  className="remove-link"
+                  aria-label={`Remove ${link.title}`}
+                  onClick={() =>
+                    void send({ type: "remove-quick-link", id: link.id })
+                  }
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            );
+          })}
           <button className="add-link" onClick={() => setAdding(!adding)}>
-            <Plus size={20} />
-            Add shortcut
+            <Plus size={18} />
+            Add
           </button>
         </div>
         {adding && (
@@ -104,6 +135,27 @@ export function Home() {
             />
             <button className="action">Save</button>
           </form>
+        )}
+        {links.length < PRODUCT_LINKS.length && (
+          <div className="restore-links">
+            {PRODUCT_LINKS.filter(
+              (link) => !links.some((item) => item.url === link.url),
+            ).map((link) => (
+              <button
+                key={link.id}
+                className="action"
+                onClick={() =>
+                  void send({
+                    type: "add-quick-link",
+                    title: link.title,
+                    url: link.url,
+                  })
+                }
+              >
+                Add {link.title}
+              </button>
+            ))}
+          </div>
         )}
         <p className="home-note">
           {privateTab

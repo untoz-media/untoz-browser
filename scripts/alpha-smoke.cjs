@@ -261,6 +261,7 @@ const assert = require("node:assert/strict");
       return !t.error && !t.isLoading;
     });
     check("Guest renderer crash presents error and user reload recovers");
+    await h.page.getByRole("button", { name: "Profile menu" }).click();
     await h.page.getByRole("button", { name: "About", exact: true }).click();
     await h.page.getByText("0.1.0-alpha.1", { exact: true }).waitFor();
     await h.page.screenshot({ path: "test-results/about-alpha.png" });

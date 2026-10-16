@@ -1,21 +1,27 @@
 # Untoz Browser Mission Document
 
-## Current implementation priority — 2026-10-03
+## Current implementation priority — 2026-10-16
 
-The active scope is lightweight everyday browsing and privacy by default. Local
-New Tab, normal/private browsing, bookmarks, history, downloads and working
-settings take priority over the long-term ecosystem concepts below. No AI,
-feeds, telemetry or cloud services are part of the current browser foundation.
-See `docs/B001-B013-report.md` for verified behavior and remaining limitations.
+Privacy and the navy browser chrome come first. The start page greets the local
+profile, search stays on a privacy-respecting engine, and Shields-style blocking
+is on by default: EasyList, EasyPrivacy, tracking-parameter removal, HTTPS-only
+for public pages, third-party cookie blocking, and a limited fingerprinting
+defense. The profile name, workspaces, favorites, and history stay on this
+device. No AI assistant, account, sync, or telemetry is part of this browser.
+See `docs/B001-B013-report.md` and `docs/B014-hardening.md`.
 
 ## Vision
+
 Untoz Browser aims to become the premier gateway to the digital world—a blazing-fast, privacy-first, beautifully crafted browsing experience that seamlessly integrates with the entire Untoz ecosystem. We envision a browser that doesn't just display web content, but enhances productivity, creativity, and digital well-being through thoughtful design and intelligent features that feel native to the Untoz experience.
 
 ## Mission
+
 Our mission is to create the fastest, most reliable, and most privacy-conscious browser on the market—built specifically for users who demand excellence in their digital tools. We exist to provide a browsing experience that gets out of the user's way while providing powerful, ecosystem-integrated capabilities that enhance rather than complicate the web experience.
 
 ## Product Identity
+
 Untoz Browser is:
+
 - **Premium**: Crafted with meticulous attention to detail, using the finest materials and technologies available
 - **Fast**: Optimized for instantaneous responsiveness in every interaction
 - **Modern**: Built with contemporary web technologies and design patterns
@@ -83,6 +89,7 @@ If it's not documented, it doesn't exist. Documentation is part of the shipping 
 ## Performance Goals
 
 The browser should always feel instant.
+
 - **Low memory usage**: Target baseline under 500MB with 10 tabs open
 - **Fast startup**: Cold launch to interactive in under 2 seconds
 - **Fast tab switching**: Tab changes should feel instantaneous (<100ms)
@@ -109,6 +116,7 @@ Code should be self-explanatory. Comments explain why, not what.
 ## Definition of Done
 
 A sprint is NOT complete unless:
+
 - `npm install` works without errors
 - `npm run dev` works and starts the development server
 - `npm run build` works and produces a production build
@@ -123,6 +131,7 @@ A sprint is NOT complete unless:
 ## Autonomous Development
 
 When working autonomously:
+
 - Always validate before continuing. Run tests, check for errors, verify functionality.
 - Always fix bugs before adding features. A broken foundation compromises everything built upon it.
 - Always refactor when appropriate. Clean code is an ongoing process, not a one-time task.
@@ -135,6 +144,7 @@ When working autonomously:
 Untoz Browser will serve as the central gateway into the entire Untoz ecosystem, providing seamless access to all Untoz services and products.
 
 **Future integrations should include:**
+
 - **Untoz Universe**: Seamless access to the Untoz metaverse and virtual environments
 - **Untoz+**: Integrated access to premium content and services
 - **Untoz Studio AI**: Direct access to AI-powered creative tools
@@ -145,4 +155,4 @@ Untoz Browser will serve as the central gateway into the entire Untoz ecosystem,
 
 This document represents our commitment to excellence, our vision for the future, and our unwavering dedication to building the best possible browsing experience for users within the Untoz ecosystem. It is the North Star that guides all development decisions, ensuring that Untoz Browser remains true to its core principles while evolving to meet the changing needs of our users.
 
-*Last updated: 2026-07-22*
+_Last updated: 2026-07-22_

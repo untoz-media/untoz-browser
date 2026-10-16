@@ -10,6 +10,9 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   settings: "Settings",
   privacy: "Site privacy",
   about: "About",
+  profile: "Profile",
+  extensions: "Extensions",
+  workspaces: "Workspaces",
 };
 function formatBytes(value: number) {
   if (!Number.isFinite(value) || value < 0) return "0 B";
@@ -37,11 +40,48 @@ function Toggle({
     </label>
   );
 }
+function ProtectionToggles({
+  settings,
+  set,
+}: {
+  settings: Settings;
+  set: (settings: Partial<Settings>) => void;
+}) {
+  return (
+    <>
+      <Toggle
+        label="HTTPS-only for public pages"
+        checked={settings.httpsOnly}
+        onChange={(httpsOnly) => set({ httpsOnly })}
+      />
+      <Toggle
+        label="Block third-party cookies"
+        checked={settings.blockThirdPartyCookies}
+        onChange={(blockThirdPartyCookies) => set({ blockThirdPartyCookies })}
+      />
+      <Toggle
+        label="Limit fingerprinting signals"
+        checked={settings.fingerprintingProtection}
+        onChange={(fingerprintingProtection) =>
+          set({ fingerprintingProtection })
+        }
+      />
+    </>
+  );
+}
 export function Panels() {
   const state = useTabsStore();
   const [historyLimit, setHistoryLimit] = useState(300);
   const [bookmarkQuery, setBookmarkQuery] = useState("");
   const [historyQuery, setHistoryQuery] = useState("");
+  const [workspaceName, setWorkspaceName] = useState("");
+  const savedName = state.settings.profileName;
+  const [profileDraft, setProfileDraft] = useState(savedName);
+  const [profileSource, setProfileSource] = useState(savedName);
+  if (profileSource !== savedName) {
+    setProfileSource(savedName);
+    setProfileDraft(savedName);
+  }
   const tab = state.tabs.find((t) => t.id === state.activeTabId);
   const bookmarkNeedle = bookmarkQuery.trim().toLowerCase();
   const historyNeedle = historyQuery.trim().toLowerCase();
@@ -319,15 +359,26 @@ export function Panels() {
             </p>
             {tab?.url.startsWith("http") && (
               <Toggle
-                label={`Protection for ${new URL(tab.url).hostname}`}
+                label={`List protection for ${new URL(tab.url).hostname}`}
                 checked={tab.protectionEnabled}
                 onChange={() => void send({ type: "toggle-site-protection" })}
               />
             )}
             <p className="muted">
-              Changes apply to future requests. Reload to apply to this page.
-              Private site exceptions are cleared when the last private tab
-              closes.
+              The site switch turns list blocking and tracking-parameter removal
+              off for this host. HTTPS-only, third-party cookies, and
+              fingerprinting limits stay as set below. Reload to apply list
+              changes to this page. Private site exceptions are cleared when the
+              last private tab closes.
+            </p>
+            <ProtectionToggles settings={state.settings} set={set} />
+            <p className="muted">
+              HTTPS-only upgrades public http pages. Localhost and loopback
+              addresses stay on http. Third-party cookie blocking drops Cookie
+              and Set-Cookie when the request site differs from the page.
+              Fingerprinting protection disables non-proxied WebRTC UDP, trims a
+              cross-site Referer to the origin, and cancels hyperlink pings. It
+              does not alter canvas, audio, or font output.
             </p>
           </div>
           <h2>Permissions for this page</h2>
@@ -347,6 +398,113 @@ export function Panels() {
               : "This is a normal browsing tab."}
           </p>
         </>
+      )}
+      {state.panel === "profile" && (
+        <div className="settings-content">
+          <p className="muted">
+            This name is stored only in this browser profile on this device.
+            There is no account, sign-in, or sync.
+          </p>
+          <form
+            className="shortcut-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const name = profileDraft.trim();
+              if (!name) return;
+              set({ profileName: name });
+            }}
+          >
+            <input
+              aria-label="Display name"
+              value={profileDraft}
+              maxLength={40}
+              onChange={(e) => setProfileDraft(e.target.value)}
+            />
+            <button className="action">Save name</button>
+          </form>
+          <div className="panel-tools">
+            <button
+              className="action"
+              onClick={() => {
+                state.setPanel(null);
+                void send({ type: "new-tab", private: true });
+              }}
+            >
+              New private tab
+            </button>
+            <button className="action" onClick={() => state.setPanel("about")}>
+              About
+            </button>
+          </div>
+        </div>
+      )}
+      {state.panel === "extensions" && (
+        <div className="settings-content">
+          <h2>Extensions are not in this version</h2>
+          <p className="muted">
+            This build does not load browser extensions. There is no extension
+            store, and Untoz does not download or run extension code.
+          </p>
+        </div>
+      )}
+      {state.panel === "workspaces" && (
+        <div className="settings-content">
+          <p className="muted">
+            A workspace is the set of normal pages open right now, saved on this
+            device. Private tabs are left out. Nothing is uploaded.
+          </p>
+          <form
+            className="shortcut-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const name = workspaceName.trim();
+              if (!name) return;
+              void send({ type: "save-workspace", name }).then(() => {
+                if (!useTabsStore.getState().error) setWorkspaceName("");
+              });
+            }}
+          >
+            <input
+              aria-label="Workspace name"
+              placeholder="Workspace name"
+              value={workspaceName}
+              maxLength={40}
+              onChange={(e) => setWorkspaceName(e.target.value)}
+            />
+            <button className="action">Save open pages</button>
+          </form>
+          {!state.workspaces.length && (
+            <p className="empty-state">No saved workspaces.</p>
+          )}
+          {state.workspaces.map((workspace) => (
+            <div className="list-row" key={workspace.id}>
+              <div className="list-main">
+                <strong>{workspace.name}</strong>
+                <span>
+                  {workspace.urls.length} page
+                  {workspace.urls.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <button
+                className="action"
+                onClick={() => {
+                  state.setPanel(null);
+                  void send({ type: "open-workspace", id: workspace.id });
+                }}
+              >
+                Open
+              </button>
+              <button
+                aria-label={`Remove ${workspace.name}`}
+                onClick={() =>
+                  void send({ type: "remove-workspace", id: workspace.id })
+                }
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
       )}
       {state.panel === "about" && (
         <div className="settings-content">
@@ -441,20 +599,26 @@ export function Panels() {
             checked={state.settings.trackerProtection}
             onChange={(trackerProtection) => set({ trackerProtection })}
           />
+          <ProtectionToggles settings={state.settings} set={set} />
+          <p className="muted">
+            HTTPS-only leaves localhost and 127.0.0.1 on http. Third-party
+            cookie blocking applies when the request site differs from the page.
+            Fingerprinting protection covers WebRTC non-proxied UDP, cross-site
+            Referer, and hyperlink pings. It does not rewrite canvas or fonts.
+          </p>
           <Toggle
             label="Clear cookies, site storage and cache on exit"
             checked={state.settings.clearSiteDataOnExit}
             onChange={(clearSiteDataOnExit) => set({ clearSiteDataOnExit })}
           />
           <p className="muted">
-            Cookies work normally during browsing. Clear on exit signs you out
-            of websites.
+            First-party cookies work during browsing. Clear on exit signs you
+            out of websites.
           </p>
           <h2>Cookie controls</h2>
           <p className="muted">
-            Cookies are allowed during browsing. Delete them below or enable
-            clear on exit to sign out of websites. Selective third-party cookie
-            blocking is not available in this alpha.
+            First-party cookies still work during browsing. Delete them below or
+            enable clear on exit to sign out of websites.
           </p>
           <div className="panel-tools">
             <button

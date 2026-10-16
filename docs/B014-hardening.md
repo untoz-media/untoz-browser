@@ -1,8 +1,35 @@
-# B014 hardening notes — 2026-10-16
+# B014 notes — 2026-10-16
 
-This pass keeps the 2026-10-03 browser: same dark shell, sidebar, local Home,
-DuckDuckGo default, local data, and no account, telemetry, or cloud service.
-`main` and the older PR #1 were not used.
+Two passes on `local-version-2026-10-03`. `main` and the older PR #1 were not used.
+There is still no account, telemetry, sync, or AI assistant.
+
+## Design and privacy
+
+The window chrome follows the navy target: U mark, tab strip, rounded address
+bar with a star, local profile chip, and a sidebar for Home, Favorites,
+History, Downloads, public shortcuts (Untoz+, Studio AI, HQ, Cloud), Extensions,
+Workspaces, Settings, a dark/light switch, and the local profile. The start
+page greets that profile by time of day, with a rounded search field and
+shortcut tiles. The marketing frame, AURA panel, AURA tile, and sidebar AI item
+are not part of the app. "Studio AI" is only a shortcut to the public Untoz
+studios page. The profile name defaults to Luis and never signs in.
+
+Privacy, on by default:
+
+- EasyList and EasyPrivacy, with a per-site switch and separate ad, tracker, and tracking-parameter counters.
+- HTTPS-only upgrades public `http` page loads. `localhost`, `127.0.0.1`, and `::1` stay on `http`.
+- Third-party cookie blocking removes `Cookie` and `Set-Cookie` when the request site differs from the page. Subdomains of the same site still share cookies.
+- Fingerprinting protection disables non-proxied WebRTC UDP, reduces a cross-site `Referer` to the origin, and cancels hyperlink pings. It does not rewrite canvas, audio, or fonts.
+- Private windows use an in-memory partition. Clear cookies, site data, and cache on exit remains optional.
+- DuckDuckGo stays the default search engine. Electron keeps `contextIsolation`, `sandbox`, and `nodeIntegration: false`, with permission prompts.
+
+Workspaces save the normal pages open in this window, on this device, up to 20
+sets. Extensions are listed so the sidebar matches the target, and the panel
+says this build does not load them.
+
+## Hardening
+
+The first pass kept the 2026-10-03 browser behavior and fixed the defects below.
 
 ## Audit
 
@@ -32,7 +59,8 @@ Not done, and not removed:
 - Restart-persistent download resume, antivirus integration, extensions, sync, accounts, AI, VPN, or Tor.
 - Home still replaces the current page and drops that page's back stack. Keeping the hidden page would spend the memory the performance goal is trying to avoid.
 - Page Visibility for hidden tabs is still an Electron limitation. Views are hidden and background throttling is on. Universal timer suspension is not claimed.
-- Third-party cookie partitioning is not exposed.
+- Third-party cookies are blocked, not partitioned. A site cannot opt a single cookie back in.
+- Fingerprinting protection is the WebRTC, Referer, and ping subset above.
 - The memory goal (under 500 MB with 10 tabs) is not met by the local fixture below.
 - Windows code signing. No certificate is configured, so signing is skipped.
 - Filter-list `.bin` files under `resources/filters` are runtime data, not build output. They stay in git. `node_modules`, `dist`, `dist-electron`, and `release` were already untracked. `.gitignore` now also names installer and portable binary extensions.
@@ -56,19 +84,36 @@ Left in place because the published fix is not compatible:
 
 ## Checks actually run on this Linux machine
 
-| Check | Result |
-| --- | --- |
-| `npm run typecheck` | Passed |
-| `npm run lint` | Passed, zero warnings |
-| `npm test` | 9 passed, 0 failed |
-| `npm run test:electron` | Passed, including window reopen |
-| `npm run test:dev` | Passed |
-| `npm run test:alpha` | Passed, including crash reload and forced termination |
-| `npm run test:tls` | Passed for example.com, self-signed, expired.badssl.com, and wrong.host.badssl.com. The local self-signed server received 0 hits |
-| `npm run benchmark` | Ran. See below |
-| `npm run test:sites` | Ran. Pages loaded. Reddit's homepage returned Reddit's own network-security block; the Reddit login page loaded |
-| `npm run build` | Renderer, main, and preload built. Portable exe produced. NSIS installer did not finish |
-| `npm run test:packaged` | Not run. It launches `release/win-unpacked/Untoz Browser.exe`, which is a Windows PE |
+Design pass, after the hardening results below:
+
+| Check                   | Result                                                                                                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run typecheck`     | Passed                                                                                                                                                      |
+| `npm run lint`          | Passed, zero warnings                                                                                                                                       |
+| `npm test`              | 11 passed, 0 failed                                                                                                                                         |
+| `npm run test:electron` | Passed, including window reopen                                                                                                                             |
+| `npm run test:dev`      | Passed                                                                                                                                                      |
+| `npm run test:alpha`    | Passed, including crash reload, forced termination, and About from the profile menu                                                                         |
+| `npm run test:tls`      | Passed. example.com loaded. Self-signed localhost, expired.badssl.com, and wrong.host.badssl.com were blocked. The local self-signed server received 0 hits |
+| UI exercise             | Passed on a temporary profile: theme switch, local rename, privacy toggles, honest extensions panel, workspace save                                         |
+
+`npm run benchmark`, `npm run test:sites`, and `npm run build` were not repeated for the design pass. Their hardening results below still describe this tree. The design pass did not change the tab process model.
+
+## Hardening checks
+
+| Check                   | Result                                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run typecheck`     | Passed                                                                                                                           |
+| `npm run lint`          | Passed, zero warnings                                                                                                            |
+| `npm test`              | 9 passed, 0 failed                                                                                                               |
+| `npm run test:electron` | Passed, including window reopen                                                                                                  |
+| `npm run test:dev`      | Passed                                                                                                                           |
+| `npm run test:alpha`    | Passed, including crash reload and forced termination                                                                            |
+| `npm run test:tls`      | Passed for example.com, self-signed, expired.badssl.com, and wrong.host.badssl.com. The local self-signed server received 0 hits |
+| `npm run benchmark`     | Ran. See below                                                                                                                   |
+| `npm run test:sites`    | Ran. Pages loaded. Reddit's homepage returned Reddit's own network-security block; the Reddit login page loaded                  |
+| `npm run build`         | Renderer, main, and preload built. Portable exe produced. NSIS installer did not finish                                          |
+| `npm run test:packaged` | Not run. It launches `release/win-unpacked/Untoz Browser.exe`, which is a Windows PE                                             |
 
 Benchmark, isolated profile, 300-article local page, summed working sets (these double-count shared memory): about 639 MiB at 1 tab, 1,078 MiB at 5, 1,633 MiB at 10, 2,746 MiB at 20. At 10 tabs the tab processes alone were about 1,180 MiB. After closing back to one tab, owned views returned to 1 and download listeners stayed at 1. CPU samples after settling were about 0. This is not the under-500 MB goal.
 

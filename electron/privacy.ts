@@ -6,6 +6,7 @@ import {
   type WebContents,
 } from "electron";
 import { isWebUrl, stripTrackingParameters } from "../shared/navigation";
+import { isThirdPartyRequest, upgradeToHttps } from "../shared/protection";
 import { join } from "node:path";
 import { NetworkFilters } from "./filters";
 import type { Settings } from "../shared/browser";
@@ -149,6 +150,19 @@ export class Privacy {
             details.resourceType === "mainFrame"
               ? details.url
               : wc?.getURL() || details.referrer;
+          if (
+            settings.httpsOnly &&
+            details.resourceType === "mainFrame" &&
+            details.method === "GET"
+          ) {
+            const upgraded = upgradeToHttps(details.url);
+            if (upgraded) return callback({ redirectURL: upgraded });
+          }
+          if (
+            settings.fingerprintingProtection &&
+            details.resourceType === "ping"
+          )
+            return callback({ cancel: true });
           const isPrivate = !ses.isPersistent();
           if (!this.siteEnabled(topUrl, isPrivate)) return callback({});
           if (details.resourceType !== "mainFrame") {
@@ -187,6 +201,66 @@ export class Privacy {
         }
       },
     );
+    ses.webRequest.onBeforeSendHeaders(
+      { urls: ["http://*/*", "https://*/*"] },
+      (details, callback) => {
+        try {
+          const settings = this.settings();
+          const topUrl = details.webContents?.getURL() || details.referrer;
+          const thirdParty = isThirdPartyRequest(details.url, topUrl);
+          const requestHeaders = { ...details.requestHeaders };
+          let changed = false;
+          if (settings.blockThirdPartyCookies && thirdParty) {
+            for (const key of Object.keys(requestHeaders))
+              if (key.toLowerCase() === "cookie") {
+                delete requestHeaders[key];
+                changed = true;
+              }
+          }
+          if (settings.fingerprintingProtection && thirdParty) {
+            for (const key of Object.keys(requestHeaders))
+              if (key.toLowerCase() === "referer") {
+                try {
+                  requestHeaders[key] =
+                    new URL(requestHeaders[key]).origin + "/";
+                  changed = true;
+                } catch {
+                  delete requestHeaders[key];
+                  changed = true;
+                }
+              }
+          }
+          callback(changed ? { requestHeaders } : {});
+        } catch {
+          callback({});
+        }
+      },
+    );
+    ses.webRequest.onHeadersReceived(
+      { urls: ["http://*/*", "https://*/*"] },
+      (details, callback) => {
+        try {
+          const settings = this.settings();
+          const topUrl = details.webContents?.getURL() || details.referrer;
+          if (
+            !settings.blockThirdPartyCookies ||
+            !isThirdPartyRequest(details.url, topUrl) ||
+            !details.responseHeaders
+          )
+            return callback({});
+          const responseHeaders = { ...details.responseHeaders };
+          let changed = false;
+          for (const key of Object.keys(responseHeaders))
+            if (key.toLowerCase() === "set-cookie") {
+              delete responseHeaders[key];
+              changed = true;
+            }
+          callback(changed ? { responseHeaders } : {});
+        } catch {
+          callback({});
+        }
+      },
+    );
   }
   private origin(wc: WebContents) {
     try {
@@ -206,6 +280,8 @@ export class Privacy {
       );
       ses.setDevicePermissionHandler(() => false);
       ses.webRequest.onBeforeRequest(null);
+      ses.webRequest.onBeforeSendHeaders(null);
+      ses.webRequest.onHeadersReceived(null);
     }
     this.sessions.clear();
   }

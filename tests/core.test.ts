@@ -13,6 +13,12 @@ import {
   stripTrackingParameters,
 } from "../shared/navigation";
 import { DEFAULT_SETTINGS, NEW_TAB, type Tab } from "../shared/browser";
+import { PRODUCT_LINKS } from "../shared/links";
+import {
+  isThirdPartyRequest,
+  siteKey,
+  upgradeToHttps,
+} from "../shared/protection";
 import { isCommand } from "../shared/commands";
 import {
   Storage,
@@ -264,6 +270,88 @@ test("versioned storage survives restart and protects corrupt input", () => {
       validSettings({ theme: "invalid" as "dark" }, DEFAULT_SETTINGS).theme,
       "dark",
     );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+test("https upgrade, third-party sites, and local profile defaults", () => {
+  assert.equal(upgradeToHttps("http://example.com/a"), "https://example.com/a");
+  assert.equal(
+    upgradeToHttps("http://example.com:8080/a?q=1"),
+    "https://example.com:8080/a?q=1",
+  );
+  assert.equal(upgradeToHttps("https://example.com/"), null);
+  assert.equal(upgradeToHttps("http://127.0.0.1:3000/one"), null);
+  assert.equal(upgradeToHttps("http://localhost:3000/a"), null);
+  assert.equal(upgradeToHttps("http://[::1]:3000/"), null);
+  assert.equal(siteKey("www.example.com"), "example.com");
+  assert.equal(siteKey("news.bbc.co.uk"), "bbc.co.uk");
+  assert.equal(
+    isThirdPartyRequest(
+      "https://ads.example.net/a.js",
+      "https://www.example.com/page",
+    ),
+    true,
+  );
+  assert.equal(
+    isThirdPartyRequest(
+      "https://cdn.example.com/a.js",
+      "https://www.example.com/page",
+    ),
+    false,
+  );
+  assert.equal(
+    isThirdPartyRequest("http://127.0.0.1/a", "http://127.0.0.1/b"),
+    false,
+  );
+  const settings = validSettings({}, DEFAULT_SETTINGS);
+  assert.equal(settings.httpsOnly, true);
+  assert.equal(settings.blockThirdPartyCookies, true);
+  assert.equal(settings.fingerprintingProtection, true);
+  assert.equal(settings.profileName, "Luis");
+  assert.equal(
+    validSettings({ profileName: "   " }, DEFAULT_SETTINGS).profileName,
+    "Luis",
+  );
+  assert.equal(
+    validSettings({ profileName: "  Ada  " }, DEFAULT_SETTINGS).profileName,
+    "Ada",
+  );
+  assert.equal(isCommand({ type: "save-workspace", name: "Morning" }), true);
+  assert.equal(
+    isCommand({ type: "save-workspace", name: "x".repeat(41) }),
+    false,
+  );
+  assert.equal(isCommand({ type: "open-workspace", id: "workspace-1" }), true);
+  assert.equal(isCommand({ type: "remove-workspace", id: 4 }), false);
+});
+test("saved workspaces keep only named http sets", () => {
+  const dir = mkdtempSync(join(tmpdir(), "untoz-workspace-"));
+  try {
+    const path = join(dir, "browser-data.json");
+    writeFileSync(
+      path,
+      JSON.stringify({
+        version: 1,
+        workspaces: [
+          {
+            id: "w1",
+            name: "Saved",
+            urls: ["https://example.com/", "notaurl", "https://untoz.site/"],
+          },
+          { id: "bad", name: "", urls: ["https://example.com/"] },
+        ],
+      }),
+    );
+    const loaded = new Storage(path);
+    assert.equal(loaded.data.workspaces.length, 1);
+    assert.equal(loaded.data.workspaces[0].name, "Saved");
+    assert.deepEqual(loaded.data.workspaces[0].urls, [
+      "https://example.com/",
+      "https://untoz.site/",
+    ]);
+    assert.equal(loaded.data.quickLinks[0].title, PRODUCT_LINKS[0].title);
+    assert.equal(loaded.data.settings.httpsOnly, true);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

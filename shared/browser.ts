@@ -40,17 +40,26 @@ export interface QuickLink {
   title: string;
   url: string;
 }
+export interface Workspace {
+  id: string;
+  name: string;
+  urls: string[];
+}
 export interface Settings {
   restoreSession: boolean;
   searchEngine: SearchEngine;
   trackerProtection: boolean;
   adBlocking: boolean;
   removeTrackingParameters: boolean;
+  httpsOnly: boolean;
+  blockThirdPartyCookies: boolean;
+  fingerprintingProtection: boolean;
   siteExceptions: string[];
   theme: "dark" | "light" | "system" | "midnight";
   askDownloadLocation: boolean;
   downloadDirectory: string;
   clearSiteDataOnExit: boolean;
+  profileName: string;
 }
 export const DEFAULT_SETTINGS: Settings = {
   restoreSession: false,
@@ -58,11 +67,15 @@ export const DEFAULT_SETTINGS: Settings = {
   trackerProtection: true,
   adBlocking: true,
   removeTrackingParameters: true,
+  httpsOnly: true,
+  blockThirdPartyCookies: true,
+  fingerprintingProtection: true,
   siteExceptions: [],
   theme: "dark",
   askDownloadLocation: true,
   downloadDirectory: "",
   clearSiteDataOnExit: false,
+  profileName: "Luis",
 };
 export interface Download {
   id: string;
@@ -81,6 +94,7 @@ export interface BrowserState {
   bookmarks: Bookmark[];
   history: HistoryEntry[];
   quickLinks: QuickLink[];
+  workspaces: Workspace[];
   downloads: Download[];
   storageError?: string;
   about?: {
@@ -112,6 +126,8 @@ export type Command =
   | { type: "remove-bookmark" | "remove-quick-link"; id: string }
   | { type: "remove-history"; url: string }
   | { type: "add-quick-link"; title: string; url: string }
+  | { type: "save-workspace"; name: string }
+  | { type: "open-workspace" | "remove-workspace"; id: string }
   | { type: "settings"; settings: Partial<Settings> }
   | {
       type: "download";
