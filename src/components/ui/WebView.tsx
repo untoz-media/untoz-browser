@@ -1,18 +1,16 @@
 import { useEffect, useRef } from 'react';
-import { useTabsStore } from '@/store/useTabsStore';
 
 interface WebViewProps {
-  url: string;
+  visible: boolean;
 }
 
-export const WebView = ({ url }: WebViewProps) => {
+export const WebView = ({ visible }: WebViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { activeTabId, updateTab } = useTabsStore();
 
   useEffect(() => {
     const container = containerRef.current;
     const browser = window.untozBrowser;
-    if (!container || !browser) return;
+    if (!container || !browser || !visible) return;
 
     const syncBounds = () => {
       const rect = container.getBoundingClientRect();
@@ -28,27 +26,21 @@ export const WebView = ({ url }: WebViewProps) => {
     observer.observe(container);
     window.addEventListener('resize', syncBounds);
     syncBounds();
-
-    const unsubscribeNavigation = browser.onNavigationState((state) => {
-      if (!activeTabId) return;
-      updateTab(activeTabId, {
-        url: state.url || url,
-        title: state.title || 'Nova Aba',
-      });
-    });
+    const unsubscribeBounds = browser.onRequestBounds(syncBounds);
 
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', syncBounds);
-      unsubscribeNavigation();
+      unsubscribeBounds();
     };
-  }, [activeTabId, updateTab, url]);
+  }, [visible]);
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full bg-background"
+      className={visible ? 'relative w-full h-full bg-background' : 'hidden'}
       aria-label="Área de navegação web"
+      aria-hidden={!visible}
     />
   );
 };

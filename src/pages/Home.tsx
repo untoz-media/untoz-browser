@@ -1,19 +1,39 @@
+import { type FormEvent } from 'react';
 import { motion } from 'framer-motion';
+import { isInternalUrl, resolveAddress } from '@/lib/navigation';
+import { useSettingsStore } from '@/store/useSettingsStore';
 import { useTabsStore } from '@/store/useTabsStore';
+import { useUiStore } from '@/store/useUiStore';
 
-export const Home = () => {
-  const { addTab } = useTabsStore();
+interface HomeProps {
+  embedded?: boolean;
+}
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const input = form.querySelector('input[type=\"text\"]') as HTMLInputElement;
-    const query = input.value.trim();
-    if (query) {
-      const url = /^https?:\/\//i.test(query) ? query : `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-      addTab(url, 'Search results');
-      input.value = '';
+export const Home = ({ embedded = false }: HomeProps) => {
+  const { tabs, activeTabId, addTab, updateTab } = useTabsStore();
+  const searchEngine = useSettingsStore((state) => state.searchEngine);
+  const closeSection = useUiStore((state) => state.closeSection);
+  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
+
+  const openTarget = (url: string, title: string) => {
+    const resolved = resolveAddress(url, searchEngine);
+    if (!resolved) return;
+    closeSection();
+    if (embedded && activeTab && isInternalUrl(activeTab.url)) {
+      updateTab(activeTab.id, { url: resolved, title, isLoading: !isInternalUrl(resolved) });
+      return;
     }
+    addTab(resolved, title);
+  };
+
+  const handleSearch = (event: FormEvent) => {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const input = form.querySelector('input[type="text"]') as HTMLInputElement | null;
+    const query = input?.value.trim() ?? '';
+    if (!query) return;
+    openTarget(query, 'Pesquisa');
+    if (input) input.value = '';
   };
 
   const quickLinks = [
@@ -50,15 +70,16 @@ export const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
-      {/* Header */}
+    <div className={`${embedded ? 'h-full overflow-y-auto' : 'min-h-screen'} bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white`}>
       <header className="bg-black/50 backdrop-blur-sm border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-4xl font-bold text-center mb-6">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-600">
-              Untoz Browser
-            </span>
-          </h1>
+          {!embedded && (
+            <h1 className="text-4xl font-bold text-center mb-6">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-600">
+                Untoz Browser
+              </span>
+            </h1>
+          )}
 
           {/* Search bar */}
           <form onSubmit={handleSearch} className="max-w-xl mx-auto">
@@ -84,7 +105,7 @@ export const Home = () => {
           {/* Quick Access Cards */}
           <section>
             <h2 className="text-2xl font-semibold mb-4 text-left">Acesso rápido</h2>
-            <div className="gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {quickLinks.map((link) => (
                 <motion.div
                   key={link.name}
@@ -97,7 +118,7 @@ export const Home = () => {
                     cursor-pointer
                   `}
                   onClick={() => {
-                    addTab(link.url, link.name);
+                    openTarget(link.url, link.name);
                   }}
                 >
                   <div className="text-3xl mb-2">{link.icon}</div>
@@ -124,7 +145,7 @@ export const Home = () => {
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   className="flex items-center p-4 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
                   onClick={() => {
-                    addTab(site.url, site.title);
+                    openTarget(site.url, site.title);
                   }}
                 >
                   <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-lg bg-gray-700/50 rounded-full">
@@ -157,7 +178,7 @@ export const Home = () => {
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   className="flex items-center p-4 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
                   onClick={() => {
-                    addTab(bm.url, bm.title);
+                    openTarget(bm.url, bm.title);
                   }}
                 >
                   <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-lg bg-gray-700/50 rounded-full">
@@ -175,7 +196,7 @@ export const Home = () => {
           {/* Continue Reading / Continue onde parou */}
           <section>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">Continúe onde parou</h2>
+              <h2 className="text-2xl font-semibold">Continue de onde parou</h2>
               <a href="#" className="text-sm text-blue-400 hover:underline">
                 Ver histórico
               </a>
@@ -189,7 +210,7 @@ export const Home = () => {
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   className="flex items-center p-4 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
                   onClick={() => {
-                    addTab(item.url, item.title);
+                    openTarget(item.url, item.title);
                   }}
                 >
                   <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-lg bg-gray-700/50 rounded-full">
@@ -226,7 +247,7 @@ export const Home = () => {
         </div>
       </main>
 
-      {/* Footer */}
+      {!embedded && (
       <footer className="bg-black/50 backdrop-blur-sm border-t border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <p className="text-center text-sm text-gray-500">
@@ -234,6 +255,7 @@ export const Home = () => {
           </p>
         </div>
       </footer>
+      )}
     </div>
   );
 };

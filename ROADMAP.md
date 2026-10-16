@@ -1,5 +1,9 @@
 # Untoz Browser 2026 Roadmap
 
+## Implementation note (2026-10-16)
+
+The repository is an Electron shell, not a Chromium fork. Q1 navigation, per-tab pages, the address bar, local bookmarks, local history, and a basic settings panel are in the working tree. Downloads, workspaces, extensions, and Untoz account services are still ahead. Performance targets have not been measured on a release build.
+
 ## Q1 2026: Foundation & Core Experience
 **Goal**: Establish a solid, performant foundation with core browsing capabilities
 

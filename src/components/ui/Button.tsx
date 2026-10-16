@@ -10,10 +10,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean;
 }
 
-const Button = React.forwardRef<
-  HTMLElement,
-  ButtonProps
->(
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       variant = 'primary',
@@ -47,15 +44,9 @@ const Button = React.forwardRef<
       lg: 'h-10 px-5 text-base',
     };
 
-    const Component = asChild ? 'span' : 'button';
-
-    return (
-      <Component
-        type={asChild ? undefined : 'button'}
-        ref={ref}
-        className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${block ? 'w-full' : ''} ${className}`}
-        {...props}
-      >
+    const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${block ? 'w-full' : ''} ${className}`;
+    const content = (
+      <>
         {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
         {icon && (
           <>
@@ -66,8 +57,22 @@ const Button = React.forwardRef<
         )}
         <span className="flex-1">{children}</span>
         {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
-      </Component>
-    )
+      </>
+    );
+
+    if (asChild) {
+      return (
+        <span className={classes} {...props}>
+          {content}
+        </span>
+      );
+    }
+
+    return (
+      <button ref={ref} className={classes} type="button" {...props}>
+        {content}
+      </button>
+    );
   }
 );
 

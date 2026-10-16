@@ -25,7 +25,7 @@ const ContextMenu = React.forwardRef<HTMLDivElement, ContextMenuProps>(
     onClose,
   }, ref) => {
     const [position, setPosition] = useState({ x: 0, y: 0 });
-    const menuRef = useRef<HTMLDivElement>(null);
+    const menuNode = useRef<{ element: HTMLDivElement | null }>({ element: null });
 
     // Set position on mount
     useEffect(() => {
@@ -35,7 +35,7 @@ const ContextMenu = React.forwardRef<HTMLDivElement, ContextMenuProps>(
     // Handle clicks outside to close
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        if (menuNode.current.element && !menuNode.current.element.contains(event.target as Node)) {
           onClose?.();
         }
       };
@@ -58,12 +58,17 @@ const ContextMenu = React.forwardRef<HTMLDivElement, ContextMenuProps>(
 
     return (
       <div
-        ref={ref}
-        className={`fixed z-50 left-[${position.x}px] top-[${position.y}px] max-w-xs w-full origin-top-left ${className}`}
+        ref={(node) => {
+          menuNode.current.element = node;
+          if (typeof ref === 'function') ref(node);
+          else if (ref) ref.current = node;
+        }}
+        className={`fixed z-50 max-w-xs w-full origin-top-left ${className}`}
+        style={{ left: position.x, top: position.y }}
       >
         <div className="rounded-md bg-popover p-1 shadow-lg backdrop-blur-md ring-1 ring-black ring-opacity-5">
           <div className="py-1" role="menu" aria-orientation="vertical">
-            {items.map((item, index) => {
+            {items.map((item) => {
               const isDisabled = item.disabled || false;
               return (
                 <div
@@ -81,7 +86,7 @@ const ContextMenu = React.forwardRef<HTMLDivElement, ContextMenuProps>(
                     }
                   `}
                   role="menuitem"
-                  tabindex={-1}
+                  tabIndex={-1}
                 >
                   {item.icon && (
                     <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center">

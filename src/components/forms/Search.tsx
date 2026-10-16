@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AiOutlineSearch } from 'react-icons/ai';
+import { Search as SearchIcon } from 'lucide-react';
 
 interface SearchProps {
   placeholder?: string;
@@ -34,7 +34,7 @@ const Search = ({
         type="submit"
         className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-r-lg bg-transparent hover:bg-primary/20"
       >
-        <AiOutlineSearch className="text-primary-400 hover:text-primary-500 transition-colors" />
+        <SearchIcon className="h-4 w-4 text-primary" />
       </button>
     </form>
   )

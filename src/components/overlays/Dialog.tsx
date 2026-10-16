@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect } from 'react';
 
 interface DialogProps {
   open: boolean;
@@ -44,16 +43,6 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(
     children,
     className = '',
   }, ref) => {
-    const mounted = useRef(false);
-
-    useEffect(() => {
-      mounted.current = open;
-
-      return () => {
-        mounted.current = false;
-      };
-    }, [open]);
-
     // Handle Escape key
     useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -80,7 +69,7 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(
       }
     };
 
-    if (!mounted) return null;
+    if (!open) return null;
 
     return (
       <div
@@ -207,7 +196,9 @@ const DialogTitle = React.forwardRef<HTMLHeadingElement, DialogTitleProps>(
     return (
       <h2
         ref={ref}
-        className={`${className} text-lg font-semibold leading-none text-foreground`}>
+        className={`${className} text-lg font-semibold leading-none text-foreground`}
+        {...props}
+      >
         {children}
       </h2>
     );
@@ -225,7 +216,9 @@ const DialogDescription = React.forwardRef<HTMLParagraphElement, DialogDescripti
     return (
       <p
         ref={ref}
-        className={`${className} mt-1 text-sm text-muted-foreground`}>
+        className={`${className} mt-1 text-sm text-muted-foreground`}
+        {...props}
+      >
         {children}
       </p>
     );

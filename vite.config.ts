@@ -4,52 +4,61 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     electronPlugin({
-      entry: 'electron/main.ts',
-      preload: 'electron/preload.ts',
+      entry: {
+        main: resolve(__dirname, 'electron/main.ts'),
+        preload: resolve(__dirname, 'electron/preload.ts'),
+      },
       vite: {
         build: {
-          outDir: 'dist'
-        }
-      }
+          outDir: 'dist-electron',
+          lib: {
+            entry: {
+              main: resolve(__dirname, 'electron/main.ts'),
+              preload: resolve(__dirname, 'electron/preload.ts'),
+            },
+            formats: ['cjs'],
+            fileName: (_format, entryName) => `${entryName}.js`,
+          },
+        },
+      },
     }),
     react(),
-    nodePolyfills()
+    nodePolyfills(),
   ],
   resolve: {
     alias: {
-      '@': '/src',
-      '@core': '/src/core',
-      '@navigation': '/src/navigation',
-      '@tabs': '/src/tabs',
-      '@address-bar': '/src/address-bar',
-      '@bookmarks': '/src/bookmarks',
-      '@history': '/src/history',
-      '@downloads': '/src/downloads',
-      '@themes': '/src/themes',
-      '@settings': '/src/settings',
-      '@untoz-universe': '/src/untoz-universe',
-      '@workspace': '/src/workspace',
-      '@extensions': '/src/extensions',
-      '@developer-tools': '/src/developer-tools',
-      '@ai': '/src/ai',
-      '@cloud': '/src/cloud'
-    }
+      '@': resolve(__dirname, 'src'),
+      '@core': resolve(__dirname, 'src/core'),
+      '@navigation': resolve(__dirname, 'src/navigation'),
+      '@tabs': resolve(__dirname, 'src/tabs'),
+      '@address-bar': resolve(__dirname, 'src/address-bar'),
+      '@bookmarks': resolve(__dirname, 'src/bookmarks'),
+      '@history': resolve(__dirname, 'src/history'),
+      '@downloads': resolve(__dirname, 'src/downloads'),
+      '@themes': resolve(__dirname, 'src/themes'),
+      '@settings': resolve(__dirname, 'src/settings'),
+      '@untoz-universe': resolve(__dirname, 'src/untoz-universe'),
+      '@workspace': resolve(__dirname, 'src/workspace'),
+      '@extensions': resolve(__dirname, 'src/extensions'),
+      '@developer-tools': resolve(__dirname, 'src/developer-tools'),
+      '@ai': resolve(__dirname, 'src/ai'),
+      '@cloud': resolve(__dirname, 'src/cloud'),
+    },
   },
   server: {
     port: 3000,
-    strictPort: true
+    strictPort: true,
   },
   build: {
     outDir: 'dist',
     sourcemap: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html')
-      }
-    }
-  }
+        main: resolve(__dirname, 'index.html'),
+      },
+    },
+  },
 });
