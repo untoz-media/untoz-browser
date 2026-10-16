@@ -1,26 +1,31 @@
 # Untoz Browser 2026 Roadmap
 
-## Current milestone status — 2026-10-03
+## Current milestone status — 2026-10-16
 
-B001–B011 have working foundations: independent tabs and navigation, default
-privacy controls, local Home, bookmarks/history, downloads, private sessions,
-settings and normal-session restoration. B012–B013 received performance and
-security passes; they remain ongoing release gates, particularly background
-page lifecycle behavior, real-site compatibility and build-tool advisories.
-The next milestone is B014: desktop compatibility and release hardening.
-See `docs/B001-B013-report.md` for exact scope and validation. The older
-quarterly targets below are historical planning, not claims of implemented features.
+B001–B013 foundations remain in place. See `docs/B001-B013-report.md`. The
+2026-10-16 pass in `docs/B014-hardening.md` keeps Electron 44.8.0 and adds the
+navy start page, local profile, dark/light toggle, local workspaces, and the
+privacy controls above the older quarterly ideas: per-site Shields, HTTPS-only,
+third-party cookie blocking, and a limited fingerprinting defense. There is
+still no AI assistant, account, or sync. Tailwind 3 and electron-builder still
+carry dev-only advisories with no safe compatible upgrade. The memory target,
+Windows code signing, and a finished NSIS installer remain release gates.
+The older quarterly targets below are historical planning, not claims of
+implemented features.
 
 ## Q1 2026: Foundation & Core Experience
+
 **Goal**: Establish a solid, performant foundation with core browsing capabilities
 
 ### Milestones:
+
 - **Jan**: Project setup, architecture finalization, development environment setup
 - **Feb**: Core Chromium fork setup, basic browser shell implementation
 - **Mar**: Tab management system, address bar implementation, basic settings
 - **Apr**: Bookmarks system, history functionality, basic settings UI
 
 ### Key Deliverables:
+
 - Functional Chromium-based browser with basic navigation
 - Tab system with basic tab management (new, close, switch)
 - Address bar with URL input and basic search
@@ -29,15 +34,18 @@ quarterly targets below are historical planning, not claims of implemented featu
 - Performance baseline established (<2s cold start, <500MB memory with 5 tabs)
 
 ## Q2 2026: Core Features & UX Refinement
+
 **Goal**: Build essential browsing features with focus on performance and UX
 
 ### Milestones:
+
 - **May**: Advanced tab features (pinned tabs, tab groups, tab search)
 - **Jun**: Download manager, print functionality, basic developer tools
 - **Jul**: Settings refinement, import/export functionality, basic extensions support
 - **Aug**: Performance optimization pass, memory optimization, startup optimization
 
 ### Key Deliverables:
+
 - Advanced tab management (pinning, grouping, searching)
 - Download manager with pause/resume/cancel
 - Print to PDF and printer functionality
@@ -46,15 +54,18 @@ quarterly targets below are historical planning, not claims of implemented featu
 - Performance targets met: <1.5s cold start, <400MB memory with 10 tabs
 
 ## Q3 2026: Untoz Ecosystem Integration
+
 **Goal**: Deep integration with Untoz ecosystem services
 
 ### Milestones:
+
 - **Sep**: Untoz One account integration (single sign-on)
 - **Oct**: Untoz HQ dashboard integration (quick access to productivity tools)
 - **Nov**: Untoz Studio AI integration (AI assistant in sidebar)
 - **Dec**: Untoz Motion AI integration (media handling enhancements)
 
 ### Key Deliverables:
+
 - Single sign-on with Untoz One accounts
 - Persistent login across Untoz services
 - Quick access panel to Untoz HQ tools
@@ -63,15 +74,18 @@ quarterly targets below are historical planning, not claims of implemented featu
 - Seamless file saving to Untoz cloud storage
 
 ## Q4 2026: Advanced Features & Polish
+
 **Goal**: Advanced features, security enhancements, and polish for release
 
 ### Milestones:
+
 - **Oct**: Advanced privacy features (tracking protection, fingerprinting protection)
 - **Nov**: Built-in VPN/TOR options, advanced security settings
 - **Dec**: Performance tuning, accessibility improvements, final polish
 - **Dec 31**: Release Candidate 1
 
 ### Key Deliverables:
+
 - Enhanced privacy controls (tracking prevention, fingerprint resistance)
 - Optional integrated VPN (basic tier free, premium via Untoz+)
 - Optional TOR integration for private browsing
@@ -83,18 +97,21 @@ quarterly targets below are historical planning, not claims of implemented featu
 ## Long-Term Vision (2027+)
 
 ### 2027 H1:
+
 - Untoz Universe integration (VR/AR browsing capabilities)
 - Advanced tab AI organization and suggestions
 - Cross-device sync improvements (Untoz One powered)
 - Progressive Web App enhancements
 
 ### 2027 H2:
+
 - Developer tools suite (advanced profiling, memory analysis)
 - Built-in productivity tools (notes, tasks, quick commands)
 - Advanced customization system (themes, layouts)
 - Enterprise deployment tools
 
 ### Key Long-Term Goals:
+
 - Become the primary gateway to the entire Untoz metaverse
 - Introduce innovative browsing paradigms (spatial web, immersive browsing)
 - Achieve industry-leading performance benchmarks
@@ -104,6 +121,7 @@ quarterly targets below are historical planning, not claims of implemented featu
 ## Success Metrics
 
 ### Performance Targets:
+
 - Cold start time: <1.5 seconds
 - Memory usage: <400MB with 10 tabs
 - Tab switch time: <100ms
@@ -111,12 +129,14 @@ quarterly targets below are historical planning, not claims of implemented featu
 - Page load times competitive with Chrome/Firefox
 
 ### Adoption Targets:
+
 - 1M active users by end of 2026
 - 50% retention rate after 30 days
 - 30% of users utilizing Untoz ecosystem integrations
 - 4.5+ star rating in app stores
 
 ### Quality Targets:
+
 - Zero critical security vulnerabilities
 - <1 crash per 1000 usage hours
 - 95%+ test coverage for core features
@@ -124,6 +144,6 @@ quarterly targets below are historical planning, not claims of implemented featu
 
 ---
 
-*This roadmap is a living document and will be updated quarterly based on user feedback, technological advancements, and strategic shifts within the Untoz ecosystem.*
+_This roadmap is a living document and will be updated quarterly based on user feedback, technological advancements, and strategic shifts within the Untoz ecosystem._
 
-*Last updated: 2026-07-22*
+_Last updated: 2026-07-22_

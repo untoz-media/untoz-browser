@@ -1,5 +1,5 @@
 import { readFileSync, mkdirSync, writeFileSync, renameSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, isAbsolute } from "node:path";
 import {
   DEFAULT_SETTINGS,
   NEW_TAB,
@@ -8,7 +8,9 @@ import {
   type QuickLink,
   type Settings,
   type Tab,
+  type Workspace,
 } from "../shared/browser";
+import { PRODUCT_LINKS } from "../shared/links";
 import { isWebUrl, isInlineFavicon } from "../shared/navigation";
 import { SEARCH_ENGINES } from "../shared/search";
 
@@ -18,6 +20,7 @@ export interface SavedData {
   bookmarks: Bookmark[];
   history: HistoryEntry[];
   quickLinks: QuickLink[];
+  workspaces: Workspace[];
   session: { urls: string[]; activeIndex: number };
 }
 export function sessionSnapshot(
@@ -39,6 +42,12 @@ export function addHistory(
 ): HistoryEntry[] {
   return [entry, ...history.filter((h) => h.url !== entry.url)].slice(0, 3000);
 }
+/** Only an absolute folder from this profile is accepted. Relative paths are ignored. */
+export function acceptedDownloadDirectory(value: unknown): string {
+  return typeof value === "string" && value.length <= 4096 && isAbsolute(value)
+    ? value
+    : "";
+}
 export function validSettings(
   input: Partial<Settings>,
   current: Settings,
@@ -51,6 +60,9 @@ export function validSettings(
     "removeTrackingParameters",
     "askDownloadLocation",
     "clearSiteDataOnExit",
+    "httpsOnly",
+    "blockThirdPartyCookies",
+    "fingerprintingProtection",
   ] as const)
     if (typeof input[key] === "boolean") result[key] = input[key];
   if (["dark", "light", "system", "midnight"].includes(input.theme ?? ""))
@@ -71,6 +83,10 @@ export function validSettings(
         ),
       ),
     ].slice(0, 1000);
+  if (typeof input.profileName === "string") {
+    const name = input.profileName.trim().slice(0, 40);
+    if (name) result.profileName = name;
+  }
   return result;
 }
 export class Storage {
@@ -79,7 +95,8 @@ export class Storage {
     settings: { ...DEFAULT_SETTINGS },
     bookmarks: [],
     history: [],
-    quickLinks: [{ id: "untoz", title: "Untoz", url: "https://untoz.site" }],
+    quickLinks: PRODUCT_LINKS.map((link) => ({ ...link })),
+    workspaces: [],
     session: { urls: [], activeIndex: 0 },
   };
   error?: string;
@@ -95,8 +112,9 @@ export class Storage {
         raw.settings ?? {},
         this.data.settings,
       );
-      if (typeof raw.settings?.downloadDirectory === "string")
-        this.data.settings.downloadDirectory = raw.settings.downloadDirectory;
+      this.data.settings.downloadDirectory = acceptedDownloadDirectory(
+        raw.settings?.downloadDirectory,
+      );
       this.data.bookmarks = (Array.isArray(raw.bookmarks) ? raw.bookmarks : [])
         .filter(
           (b) =>
@@ -134,6 +152,23 @@ export class Storage {
             isWebUrl(q.url),
         )
         .slice(0, 12);
+      this.data.workspaces = (
+        Array.isArray(raw.workspaces) ? raw.workspaces : []
+      )
+        .filter(
+          (workspace) =>
+            workspace &&
+            typeof workspace.id === "string" &&
+            typeof workspace.name === "string" &&
+            Array.isArray(workspace.urls),
+        )
+        .slice(0, 20)
+        .map((workspace) => ({
+          id: workspace.id,
+          name: workspace.name.slice(0, 40),
+          urls: workspace.urls.filter((url) => isWebUrl(url)).slice(0, 30),
+        }))
+        .filter((workspace) => workspace.name && workspace.urls.length);
       this.data.session = {
         urls: (Array.isArray(raw.session?.urls) ? raw.session.urls : [])
           .filter((u) => u === NEW_TAB || isWebUrl(u))

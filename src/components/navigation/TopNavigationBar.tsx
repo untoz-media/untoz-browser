@@ -122,6 +122,23 @@ export function TopNavigationBar() {
         <Shield size={18} />
         <span>{(tab?.blockedTrackers || 0) + (tab?.blockedAds || 0)}</span>
       </button>
+      <ProfileChip />
     </nav>
+  );
+}
+function ProfileChip() {
+  const name = useTabsStore((s) => s.settings.profileName);
+  const selected = useTabsStore((s) => s.panel === "profile");
+  return (
+    <button
+      className={`profile-chip ${selected ? "selected" : ""}`}
+      aria-label="Profile menu"
+      onClick={() => useTabsStore.getState().setPanel("profile")}
+    >
+      <span className="profile-avatar" aria-hidden>
+        {name.charAt(0).toUpperCase()}
+      </span>
+      {name}
+    </button>
   );
 }

@@ -1,11 +1,15 @@
 # Untoz Browser
 
-Current browser foundation (B001–B013): independent native tabs, local New Tab,
-bookmarks/history, private sessions, download management, working settings and
-privacy defaults. See [the implementation and validation report](docs/B001-B013-report.md).
+Current browser: independent native tabs, a navy start page, local profile,
+favorites, history, downloads, private windows, and privacy defaults (EasyList,
+EasyPrivacy, HTTPS-only, third-party cookie blocking, limited fingerprinting
+protection). See [the implementation report](docs/B001-B013-report.md) and
+[the 2026-10-16 notes](docs/B014-hardening.md).
 
-Use Node.js 22.12+ (tested with Node 24). Run `npm install`, then `npm run dev`.
+Use Node.js 22.12+ (tested with Node 22 and 24). Run `npm install`, then `npm run dev`.
 `npm run build` produces the Windows portable executable under `release/`.
+This tree uses Electron 44.8.0. Electron 44 is supported until 2027-03-02.
+Electron 45 was still beta on 2026-10-16 and is not used.
 Checks: `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:electron`,
 and `npm run test:dev`. Integration tests use temporary isolated profiles.
 Close the dev server before running build/integration scripts; both emit to
@@ -50,15 +54,15 @@ Untoz Browser aims to provide:
 
 Untoz Browser is built using modern web and desktop technologies.
 
-| Technology | Purpose |
-|------------|---------|
-| **Electron** | Desktop application framework |
-| **React** | User interface |
-| **TypeScript** | Type-safe application development |
-| **Vite** | Development server and build tooling |
-| **Tailwind CSS** | UI styling |
-| **Zustand** | Application state management |
-| **Native WebContentsView** | Independent Chromium pages |
+| Technology                 | Purpose                              |
+| -------------------------- | ------------------------------------ |
+| **Electron**               | Desktop application framework        |
+| **React**                  | User interface                       |
+| **TypeScript**             | Type-safe application development    |
+| **Vite**                   | Development server and build tooling |
+| **Tailwind CSS**           | UI styling                           |
+| **Zustand**                | Application state management         |
+| **Native WebContentsView** | Independent Chromium pages           |
 
 ---
 
@@ -96,3 +100,4 @@ untoz-browser/
 ├── tsconfig.json
 ├── tsconfig.node.json
 └── vite.config.ts
+```

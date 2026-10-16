@@ -22,6 +22,11 @@ export function isCommand(value: unknown): value is Command {
       return string(c.url);
     case "add-quick-link":
       return string(c.title, 100) && string(c.url);
+    case "save-workspace":
+      return string(c.name, 40);
+    case "open-workspace":
+    case "remove-workspace":
+      return string(c.id, 100);
     case "settings":
       return (
         !!c.settings &&
@@ -31,7 +36,9 @@ export function isCommand(value: unknown): value is Command {
     case "download":
       return (
         string(c.id, 100) &&
-        ["cancel", "open", "show", "remove"].includes(String(c.action))
+        ["cancel", "open", "show", "remove", "pause", "resume"].includes(
+          String(c.action),
+        )
       );
     case "window":
       return ["minimize", "maximize", "close"].includes(String(c.action));

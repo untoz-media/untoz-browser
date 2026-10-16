@@ -42,7 +42,7 @@
     "@typescript-eslint/parser": "^8.71.0",
     "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.6.1",
-    "electron": "^44.5.1",
+    "electron": "^44.8.0",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.2",
     "eslint": "^8.38.0",
@@ -100,5 +100,9 @@
   },
   "engines": {
     "node": ">=22.12.0"
+  },
+  "overrides": {
+    "http-cache-semantics": "4.3.0",
+    "source-map-js": "1.2.2"
   }
 }

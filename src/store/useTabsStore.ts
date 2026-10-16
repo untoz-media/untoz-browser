@@ -11,6 +11,9 @@ export type Panel =
   | "settings"
   | "privacy"
   | "about"
+  | "profile"
+  | "extensions"
+  | "workspaces"
   | null;
 interface State extends BrowserState {
   ready: boolean;
@@ -24,6 +27,7 @@ export const useTabsStore = create<State>((set) => ({
   bookmarks: [],
   history: [],
   quickLinks: [],
+  workspaces: [],
   downloads: [],
   settings: DEFAULT_SETTINGS,
   ready: false,

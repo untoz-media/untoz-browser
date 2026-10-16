@@ -36,7 +36,11 @@ const { _electron: electron } = require("playwright-core");
     const page = await app.firstWindow();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.getByRole("heading", { name: "Untoz Browser" }).waitFor();
+    await page
+      .getByRole("heading", {
+        name: /Good (morning|afternoon|evening), Luis\./,
+      })
+      .waitFor();
     const state = await page.evaluate(() => window.untozBrowser.snapshot());
     if (state.tabs.length !== 1 || errors.length)
       throw new Error(errors.join("\n") || "No initial tab");

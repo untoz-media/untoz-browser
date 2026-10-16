@@ -66,7 +66,9 @@ const os = require("node:os");
     page.on("pageerror", (e) => console.error("Renderer error:", e));
     await page.waitForFunction(() => !!window.untozBrowser, { timeout: 15000 });
     await page
-      .getByRole("heading", { name: "Untoz Browser" })
+      .getByRole("heading", {
+        name: /Good (morning|afternoon|evening), Luis\./,
+      })
       .waitFor({ timeout: 15000 });
   };
   const command = (c) =>
