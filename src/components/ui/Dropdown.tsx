@@ -10,20 +10,15 @@ interface DropdownProps {
   className?: string;
 }
 
-interface DropdownTriggerProps {
+interface DropdownTriggerProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  open: boolean;
 }
 
-interface DropdownContentProps {
+interface DropdownContentProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  align: 'start' | 'center' | 'end';
-  sideOffset: number;
-  alignOffset: number;
-  collisionPadding: number;
 }
 
-const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
+const DropdownBase = React.forwardRef<HTMLDivElement, DropdownProps>(
   ({
     children,
     trigger,
@@ -45,17 +40,21 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
             setOpen(!open);
           }}
         >
-          {(typeof trigger === 'function') ? trigger({ open }) : trigger}
+          {trigger}
         </div>
 
         {open && (
           <div
-            className={`absolute z-50 mt-2 w-56 origin-top-left rounded-md bg-popover p-1 shadow-lg backdrop-blur-md 
+            className={`absolute z-50 w-56 origin-top-left rounded-md bg-popover p-1 shadow-lg backdrop-blur-md 
                       ring-1 ring-black ring-opacity-5 focus:outline-none 
-                      ${["left", "center", "right"].includes(align) ? `transform-${align}` : ''}`}
+                      ${align === 'center' ? 'left-1/2 -translate-x-1/2' : ''}
+                      ${align === 'end' ? 'right-0' : ''}
+                      ${align === 'start' ? 'left-0' : ''}`}
             style={{
-              left: 0,
-              top: '100%',
+              top: `calc(100% + ${sideOffset}px)`,
+              marginLeft: align === 'end' ? undefined : alignOffset,
+              marginRight: align === 'end' ? alignOffset : undefined,
+              padding: collisionPadding,
             }}
           >
             <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
@@ -68,12 +67,7 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
   }
 );
 
-Dropdown.displayName = 'Dropdown';
-
-interface DropdownTriggerProps {
-  children: React.ReactNode;
-  open: boolean;
-}
+DropdownBase.displayName = 'Dropdown';
 
 const DropdownTrigger = React.forwardRef<HTMLDivElement, DropdownTriggerProps>(
   ({ children, className = '', ...props }, ref) => (
@@ -91,10 +85,6 @@ const DropdownTrigger = React.forwardRef<HTMLDivElement, DropdownTriggerProps>(
 
 DropdownTrigger.displayName = 'DropdownTrigger';
 
-interface DropdownContentProps {
-  children: React.ReactNode;
-}
-
 const DropdownContent = React.forwardRef<HTMLDivElement, DropdownContentProps>(
   ({ children, className = '', ...props }, ref) => (
     <div
@@ -107,7 +97,7 @@ const DropdownContent = React.forwardRef<HTMLDivElement, DropdownContentProps>(
                ${className}`}
       role="menu"
       aria-orientation="vertical"
-      tabindex={-1}
+      tabIndex={-1}
       {...props}
     >
       {children}
@@ -117,7 +107,9 @@ const DropdownContent = React.forwardRef<HTMLDivElement, DropdownContentProps>(
 
 DropdownContent.displayName = 'DropdownContent';
 
-Dropdown.Trigger = DropdownTrigger;
-Dropdown.Content = DropdownContent;
+const Dropdown = Object.assign(DropdownBase, {
+  Trigger: DropdownTrigger,
+  Content: DropdownContent,
+});
 
 export { Dropdown };

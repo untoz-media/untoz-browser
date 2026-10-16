@@ -10,12 +10,20 @@ interface TabProps {
   onClose: (id: string) => void;
 }
 
+const fallbackFavicon = (url: string) => {
+  try {
+    return `https://www.google.com/s2/favicons?sz=64&domain=${new URL(url).hostname}`;
+  } catch {
+    return '';
+  }
+};
+
 export const Tab = ({ id, url, title, favicon, active, onSelect, onClose }: TabProps) => {
   return (
     <motion.div
       key={id}
       className={`
-        flex items-center space-x-1.5 px-2 py-1 rounded-xl
+        group flex items-center space-x-1.5 px-2 py-1 rounded-xl
         transition-all duration-200
         select-none cursor-pointer
         ${active
@@ -28,16 +36,17 @@ export const Tab = ({ id, url, title, favicon, active, onSelect, onClose }: TabP
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelect(id)}
     >
-      {/* Favicon */}
       <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
         {favicon ? (
           <img
             src={favicon}
-            alt="favicon"
+            alt=""
             className="h-4 w-4 object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = `https://www.google.com/s2/favicons?sz=64&domain=${new URL(url).hostname}`;
+            onError={(event) => {
+              const image = event.currentTarget;
+              image.onerror = null;
+              const fallback = fallbackFavicon(url);
+              if (fallback) image.src = fallback;
             }}
           />
         ) : (
@@ -47,30 +56,25 @@ export const Tab = ({ id, url, title, favicon, active, onSelect, onClose }: TabP
         )}
       </div>
 
-      {/* Tab title */}
-      <span className="text-xs font-medium truncate max-w-[100px]">
-        {title}
-      </span>
+      <span className="text-xs font-medium truncate max-w-[100px]">{title}</span>
 
-      {/* Close button - only visible on hover or active */}
-      {active || (
-        <motion.button
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose(id);
-          }}
-          className={`
-            p-0.5 rounded-full hover:bg-accent/20 hover:backdrop-brightness-105
-            transition-all duration-100
-            flex items-center justify-center
-            text-xs text-foreground/40 hover:text-foreground/60
-            hidden sm:flex
-          `}
-          aria-label="Fechar aba"
-        >
-          ×
-        </motion.button>
-      )}
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onClose(id);
+        }}
+        className={`
+          p-0.5 rounded-full hover:bg-accent/20 hover:backdrop-brightness-105
+          transition-all duration-100
+          items-center justify-center
+          text-xs text-foreground/40 hover:text-foreground/60
+          ${active ? 'flex' : 'hidden group-hover:flex'}
+        `}
+        aria-label={`Fechar ${title}`}
+      >
+        ×
+      </button>
     </motion.div>
   );
 };

@@ -18,49 +18,49 @@ module.exports = {
       colors: {
         // Foundation - Sophisticated dark theme with subtle transparency for mica effect
         background: '#0f0f0f',          // Primary background
-        background-hover: '#1a1a1a',    // Hover state
-        background-muted: '#1a1a1a',    // Muted background
-        background-muted-hover: '#242424', // Muted hover
+        'background-hover': '#1a1a1a',    // Hover state
+        'background-muted': '#1a1a1a',    // Muted background
+        'background-muted-hover': '#242424', // Muted hover
 
         foreground: '#ffffff',          // Primary foreground
-        foreground-muted: '#a1a1aa',    // Muted foreground
-        foreground-muted-hover: '#d4d4d8', // Muted foreground hover
+        'foreground-muted': '#a1a1aa',    // Muted foreground
+        'foreground-muted-hover': '#d4d4d8', // Muted foreground hover
 
         // Primary - Untoz Brand (Sophisticated Blue-Purple gradient-like)
         primary: '#6366f1',             // Vibrant Indigo
-        primary-foreground: '#ffffff',  // Text on primary
-        primary-muted: '#818cf8',       // Muted primary
-        primary-muted-foreground: '#1e1b4b', // Text on muted primary
+        'primary-foreground': '#ffffff',  // Text on primary
+        'primary-muted': '#818cf8',       // Muted primary
+        'primary-muted-foreground': '#1e1b4b', // Text on muted primary
 
         // Secondary - Subtle accents
         secondary: '#8b5cf6',           // Violet
-        secondary-foreground: '#ffffff',
-        secondary-muted: '#a78bfa',
-        secondary-muted-foreground: '#312e81',
+        'secondary-foreground': '#ffffff',
+        'secondary-muted': '#a78bfa',
+        'secondary-muted-foreground': '#312e81',
 
         // Accent - For interactive elements
         accent: '#06b6d4',              // Cyan
-        accent-foreground: '#ffffff',
-        accent-muted: '#67e8f9',
-        accent-muted-foreground: '#0369a1',
+        'accent-foreground': '#ffffff',
+        'accent-muted': '#67e8f9',
+        'accent-muted-foreground': '#0369a1',
 
         // Border - Subtle borders with transparency
         border: 'rgb(255 255 255 / 0.1)',       // ~10% white
-        border-hover: 'rgb(255 255 255 / 0.2)', // ~20% white
-        border-muted: 'rgb(255 255 255 / 0.05)', // ~5% white
+        'border-hover': 'rgb(255 255 255 / 0.2)', // ~20% white
+        'border-muted': 'rgb(255 255 255 / 0.05)', // ~5% white
         input: 'rgb(255 255 255 / 0.15)',       // ~15% white for inputs
 
         // Ring - Focus rings
         ring: 'rgb(99 102 241 / 0.5)',          // Primary with 50% opacity
-        ring-offset: 0,
+        'ring-offset': 0,
 
         // Shadows - Sophisticated elevation
-        shadow-sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        'shadow-sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
         shadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-        shadow-md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        shadow-lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1)',
-        shadow-xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-        shadow-2xl: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+        'shadow-md': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        'shadow-lg': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1)',
+        'shadow-xl': '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+        'shadow-2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
 
         // Blur effects for mica/acrylic appearance
         blur: '8px',
@@ -253,9 +253,5 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio'),
-  ],
+  plugins: [],
 };

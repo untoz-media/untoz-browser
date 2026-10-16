@@ -2,14 +2,18 @@
   "name": "untoz-browser",
   "version": "1.0.0",
   "description": "Untoz Browser - A premium, minimalist, and extremely fast browser",
-  "main": "dist/main.js",
+  "main": "dist-electron/main.js",
   "author": "Untoz",
   "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "set ELECTRON_BUILDER_SKIP_BINARY_DOWNLOAD=1 && vite build && electron-builder --win portable",
+    "build:render": "vite build",
+    "build:electron": "electron-builder --win portable",
+    "build": "cross-env ELECTRON_BUILDER_SKIP_BINARY_DOWNLOAD=1 npm run build:render && npm run build:electron",
     "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
+    "test": "vitest run",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write ."
   },
@@ -31,6 +35,8 @@
     "cross-env": "^10.1.0",
     "electron": "^25.0.0",
     "electron-builder": "^24.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.38.0",
     "eslint-plugin-react": "^7.32.2",
     "postcss": "^8.4.21",
@@ -38,6 +44,7 @@
     "typescript": "^5.0.3",
     "vite": "^4.3.0",
     "vite-plugin-electron": "^0.12.0",
+    "vitest": "^1.6.1",
     "vite-plugin-node-polyfills": "^0.28.0"
   },
   "build": {
@@ -48,11 +55,11 @@
     },
     "files": [
       "dist/**/*",
-      "node_modules/**/*"
+      "dist-electron/**/*"
     ],
     "win": {
       "target": "portable",
-      "sign": false
+      "signAndEditExecutable": false
     },
     "mac": {
       "target": "default",

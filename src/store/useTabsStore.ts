@@ -1,56 +1,31 @@
 import { create } from 'zustand';
-
-interface Tab {
-  id: string;
-  url: string;
-  title: string;
-  favicon?: string;
-}
+import { DEFAULT_HOMEPAGE } from '@/lib/navigation';
+import { addTab as addTabState, createTabId, removeTab as removeTabState, updateTab as updateTabState, type BrowserTab } from '@/lib/tabs';
 
 interface TabsStore {
-  tabs: Tab[];
+  tabs: BrowserTab[];
   activeTabId: string | null;
-  addTab: (url: string, title?: string) => void;
+  addTab: (url: string, title?: string) => string;
   removeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
-  updateTab: (id: string, updates: Partial<Tab>) => void;
+  updateTab: (id: string, updates: Partial<BrowserTab>) => void;
 }
 
-export const useTabsStore = create<TabsStore>((set, get) => ({
-  tabs: [
-    { id: '1', url: 'https://www.untoz.com', title: 'Untoz' },
-  ],
+export const useTabsStore = create<TabsStore>((set) => ({
+  tabs: [{ id: '1', url: DEFAULT_HOMEPAGE, title: 'Untoz' }],
   activeTabId: '1',
-  addTab: (url, title = 'New Tab') => {
-    const id = Math.random().toString(36).substr(2, 9);
-    set(state => {
-      const newTab = { id, url, title };
-      return {
-        tabs: [...state.tabs, newTab],
-        activeTabId: id,
-      };
-    });
+  addTab: (url, title = 'Nova aba') => {
+    const id = createTabId();
+    set((state) => addTabState(state, { id, url, title }));
+    return id;
   },
   removeTab: (id) => {
-    set(state => {
-      const tabs = state.tabs.filter(tab => tab.id !== id);
-      let activeTabId = state.activeTabId;
-      if (activeTabId === id) {
-        // activate the next tab, or the previous if none
-        const remaining = tabs.find(t => t.id !== id);
-        activeTabId = remaining ? remaining.id : null;
-      }
-      return { tabs, activeTabId };
-    });
+    set((state) => removeTabState(state, id));
   },
   setActiveTab: (id) => {
     set({ activeTabId: id });
   },
   updateTab: (id, updates) => {
-    set(state => ({
-      tabs: state.tabs.map(tab =>
-        tab.id === id ? { ...tab, ...updates } : tab
-      ),
-    }));
+    set((state) => updateTabState(state, id, updates));
   },
 }));

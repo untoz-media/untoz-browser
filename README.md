@@ -12,9 +12,27 @@ The project combines a clean, premium interface with a powerful browser engine, 
 
 **Untoz Browser is currently in active development.**
 
-The project is being developed incrementally, starting with the core browser engine and navigation system before expanding into advanced browser features.
+What works in the current shell:
 
-Expect frequent changes while the architecture and core functionality continue to evolve.
+- Electron window with a sandboxed native page view per tab
+- Address bar, back, forward, reload, stop, and homepage
+- Tabs: create, close, and switch, each with its own page
+- Local bookmarks, history, and settings stored on the computer
+- Navigation limited to `http` and `https`
+
+Not in this version yet: download manager, workspaces, extensions, sync, and Untoz account services. The Windows portable package is produced with `npm run build` on Windows. GitHub Actions is not a release path for this repository.
+
+## Scripts
+
+```bash
+npm install
+npm test
+npm run typecheck
+npm run lint
+npm run dev
+npm run build:render
+npm run build
+```
 
 ---
 

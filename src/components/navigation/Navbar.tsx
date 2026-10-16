@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface NavbarProps {
   className?: string;
@@ -18,7 +18,7 @@ const Navbar = ({ className = '', children, ...props }: NavbarProps) => {
           <div className="h-8 w-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">U</span>
           </div>
-          <span class="text-xl font-bold text-white">Untoz Browser</span>
+          <span className="text-xl font-bold text-white">Untoz Browser</span>
         </div>
       </div>
 

@@ -1,5 +1,14 @@
-import React from 'react';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './Dialog';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  type DialogProps,
+  type DialogTriggerProps,
+  type DialogContentProps,
+} from './Dialog';
 
 // Re-export Dialog components as Modal equivalents for clarity
 export const Modal = Dialog;

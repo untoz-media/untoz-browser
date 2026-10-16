@@ -16,10 +16,9 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
     variant = 'default',
     onOpenChange,
     className = '',
-    children,
   }, ref) => {
     const [open, setOpen] = useState(true);
-    const hideTimeout = useRef<NodeJS.Timeout | null>(null);
+    const hideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
       if (!open) {
